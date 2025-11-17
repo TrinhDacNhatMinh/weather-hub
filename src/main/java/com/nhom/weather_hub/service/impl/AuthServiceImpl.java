@@ -1,13 +1,22 @@
 package com.nhom.weather_hub.service.impl;
 
 import com.nhom.weather_hub.dto.request.LoginRequest;
+import com.nhom.weather_hub.dto.request.RefreshTokenRequest;
+import com.nhom.weather_hub.dto.request.RegisterRequest;
 import com.nhom.weather_hub.dto.response.AuthResponse;
+import com.nhom.weather_hub.dto.response.RegisterResponse;
+import com.nhom.weather_hub.dto.response.VerifyResponse;
 import com.nhom.weather_hub.entity.RefreshToken;
+import com.nhom.weather_hub.entity.Role;
 import com.nhom.weather_hub.entity.User;
+import com.nhom.weather_hub.entity.VerificationToken;
 import com.nhom.weather_hub.repository.RefreshTokenRepository;
+import com.nhom.weather_hub.repository.RoleRepository;
 import com.nhom.weather_hub.repository.UserRepository;
+import com.nhom.weather_hub.repository.VerificationTokenRepository;
 import com.nhom.weather_hub.security.JwtUtil;
 import com.nhom.weather_hub.service.AuthService;
+import com.nhom.weather_hub.service.MailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -23,8 +33,11 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final VerificationTokenRepository verificationTokenRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final MailService mailService;
 
     @Value("${jwt.refresh-expiration}")
     private long refreshExpiration;
@@ -57,20 +70,19 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public AuthResponse refreshToken(String refreshToken) {
-        RefreshToken tokenEntity = refreshTokenRepository.findByToken(refreshToken)
+    public AuthResponse refreshToken(RefreshTokenRequest request) {
+        RefreshToken tokenEntity = refreshTokenRepository.findByToken(request.getRefreshToken())
                 .orElseThrow(() -> new BadCredentialsException("Refresh token not found"));
 
         if (tokenEntity.getExpiryDate().isBefore(Instant.now())) {
             refreshTokenRepository.delete(tokenEntity);
             throw new BadCredentialsException("Refresh token expired");
         }
-
-        if (!jwtUtil.validateToken(refreshToken)) {
+        if (!jwtUtil.validateToken(request.getRefreshToken())) {
             throw new BadCredentialsException("Invalid refresh token");
         }
 
-        String username = jwtUtil.getUsernameFromToken(refreshToken);
+        String username = jwtUtil.getUsernameFromToken(request.getRefreshToken());
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new BadCredentialsException("User not found"));
 
@@ -87,5 +99,67 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenRepository.save(newTokenEntity);
 
         return new AuthResponse(newAccessToken, newRefreshToken);
+    }
+
+    @Override
+    @Transactional
+    public RegisterResponse register(RegisterRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new RuntimeException("Username already exist");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already exist");
+        }
+
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        Role role = roleRepository.findByName(Role.RoleName.ROLE_USER)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+        User user = User.builder()
+                .name(request.getName())
+                .username(request.getUsername())
+                .password(encodedPassword)
+                .email(request.getEmail())
+                .active(false)
+                .role(role)
+                .build();
+        userRepository.save(user);
+
+        String token = UUID.randomUUID().toString();
+        VerificationToken verificationToken = VerificationToken.builder()
+                .token(token)
+                .expiryDate(Instant.now().plusSeconds(86400))
+                .user(user)
+                .build();
+        verificationTokenRepository.save(verificationToken);
+        mailService.sendVerificationEmail(user.getEmail(), token);
+
+        return new RegisterResponse(
+                user.getId(),
+                user.getEmail(),
+                user.isActive(),
+                "Register successfully. Please check your email to verify."
+        );
+    }
+
+    @Override
+    public VerifyResponse verifyEmail(String token) {
+        VerificationToken verificationToken = verificationTokenRepository
+                .findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid verify token"));
+        if (verificationToken.getExpiryDate().isBefore(Instant.now())) {
+            throw new IllegalArgumentException("Token expired");
+        }
+
+        User user = verificationToken.getUser();
+        user.setActive(true);
+        userRepository.save(user);
+        verificationTokenRepository.delete(verificationToken);
+
+        return new VerifyResponse(
+                user.getEmail(),
+                true,
+                Instant.now(),
+                "Account verified successfully"
+        );
     }
 }
