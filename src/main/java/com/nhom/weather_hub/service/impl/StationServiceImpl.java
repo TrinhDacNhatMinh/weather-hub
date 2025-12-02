@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.Instant;
@@ -27,6 +28,7 @@ public class StationServiceImpl implements StationService {
     private final StationMapper stationMapper;
 
     @Override
+    @Transactional
     public String createStation() {
         Station station = new Station();
         station.setApiKey(generateApiKey());
@@ -46,6 +48,7 @@ public class StationServiceImpl implements StationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponse<StationResponse> getStations(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("CreateAt").descending());
         Page<Station> stationPage = stationRepository.findAll(pageable);
@@ -64,6 +67,7 @@ public class StationServiceImpl implements StationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponse<StationResponse> getStationsByUser(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("CreateAt").descending());
         Page<Station> stationPage = stationRepository.findByUserId(userId, pageable);
@@ -82,6 +86,7 @@ public class StationServiceImpl implements StationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public StationResponse getStationById(Long id) {
         Station station = stationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Station not found"));
@@ -89,6 +94,7 @@ public class StationServiceImpl implements StationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public StationResponse getStationByApiKey(String apiKey) {
         Station station = stationRepository.findByApiKey(apiKey)
                 .orElseThrow(() -> new RuntimeException("Station not found"));
@@ -96,6 +102,7 @@ public class StationServiceImpl implements StationService {
     }
 
     @Override
+    @Transactional
     public StationResponse updateStation(Long stationId, StationRequest updateRequest) {
         Station existing = stationRepository.findById(stationId)
                 .orElseThrow(() -> new RuntimeException("Station not found"));
@@ -105,6 +112,7 @@ public class StationServiceImpl implements StationService {
     }
 
     @Override
+    @Transactional
     public void deleteStation(Long id) {
         if (!stationRepository.existsById(id)) {
             throw new RuntimeException("Station not found");

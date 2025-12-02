@@ -142,6 +142,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public VerifyResponse verifyEmail(String token) {
         VerificationToken verificationToken = verificationTokenRepository
                 .findByToken(token)
