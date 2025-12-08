@@ -11,7 +11,12 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "verification_token")
+@Table(
+        name = "verification_token",
+        indexes = {
+                @Index(name = "idx_verification_token", columnList = "user_id")
+        }
+)
 public class VerificationToken {
 
     @Id
@@ -22,10 +27,10 @@ public class VerificationToken {
     @Column(name = "token", unique = true)
     private String token;
 
-    @Column(name = "expiry_date")
+    @Column(name = "expiry_date", nullable = false)
     private Instant expiryDate;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 

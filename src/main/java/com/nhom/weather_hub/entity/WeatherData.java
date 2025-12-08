@@ -14,7 +14,8 @@ import java.time.Instant;
 @Builder
 @Entity
 @Table(name = "weather_data", indexes = {
-        @Index(name = "idx_record_at", columnList = "record_at")
+        @Index(name = "idx_weather_data_record_at", columnList = "record_at"),
+        @Index(name = "idx_weather_data_station_id", columnList = "station_id")
 })
 public class WeatherData {
 
@@ -24,24 +25,24 @@ public class WeatherData {
     private Long id;
 
     @Column(name = "temperature")
-    private Double temperature;
+    private Float temperature;
 
     @Column(name = "humidity")
     @Max(100)
     @Min(0)
-    private Double humidity;
+    private Float humidity;
 
     @Column(name = "wind_speed")
     @Min(0)
-    private Double windSpeed;
+    private Float windSpeed;
 
     @Column(name = "rainfall")
     @Min(0)
-    private Double rainfall;
+    private Float rainfall;
 
     @Column(name = "dust")
     @Min(0)
-    private Double dust;
+    private Float dust;
 
     @Column(name = "record_at", nullable = false)
     private Instant recordAt;
@@ -49,5 +50,8 @@ public class WeatherData {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "station_id", nullable = false)
     private Station station;
+
+    @OneToOne(mappedBy = "weatherData", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Alert alert;
 
 }

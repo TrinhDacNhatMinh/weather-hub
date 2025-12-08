@@ -8,13 +8,20 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "stations")
+@Table(
+        name = "stations",
+        indexes = {
+                @Index(name = "idx_station_api_key", columnList = "api_key"),
+                @Index(name = "idx_station_user_id", columnList = "user_id")
+        }
+)
 public class Station {
 
     @Id
@@ -37,16 +44,26 @@ public class Station {
     @Column(name = "api_key", nullable = false, unique = true)
     private String apiKey;
 
-    @Column(name = "create_at", nullable = false)
-    private Instant createAt;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
 
-    @Column(name = "update_at")
-    private Instant updateAt;
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 
     @Column(name = "active", nullable = false)
-    private Boolean active = false;
+    private Boolean active;
+
+    @Column(name = "is_public", nullable = false)
+    private Boolean isPublic;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @OneToOne(mappedBy = "station", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Threshold threshold;
+
+    @OneToMany(mappedBy = "station", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WeatherData> weatherDataList;
+
 }
