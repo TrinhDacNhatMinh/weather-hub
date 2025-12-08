@@ -12,24 +12,24 @@ import java.time.Instant;
 public class WeatherDataRequest {
 
     @Schema(description = "Temperature in Celsius.", example = "28.5")
-    private Double temperature;
+    private Float temperature;
 
     @DecimalMax(value = "100")
     @DecimalMin(value = "0")
     @Schema(description = "Humidity percentage.", example = "65")
-    private Double humidity;
+    private Float humidity;
 
     @DecimalMin(value = "0")
     @Schema(description = "Wind speed in m/s.", example = "1.2")
-    private Double windSpeed;
+    private Float windSpeed;
 
     @DecimalMin(value = "0")
     @Schema(description = "Rainfall amount (mm).", example = "50")
-    private Double rainfall;
+    private Float rainfall;
 
     @DecimalMin(value = "0")
     @Schema(description = "Dust concentration.", example = "42")
-    private Double dust;
+    private Float dust;
 
     @Schema(description = "Timestamp of the reading.", example = "2025-11-20T10:20:00Z")
     private Instant recordAt;

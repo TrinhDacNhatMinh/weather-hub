@@ -1,6 +1,7 @@
 package com.nhom.weather_hub.dto.response;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 import java.util.List;
 

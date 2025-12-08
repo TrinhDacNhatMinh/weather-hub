@@ -22,4 +22,5 @@ public class VerifyResponse {
 
     @Schema(description = "Message indicating verification result", example = "Account verified successfully")
     private String message;
+
 }

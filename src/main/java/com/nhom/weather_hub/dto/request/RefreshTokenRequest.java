@@ -12,4 +12,5 @@ public class RefreshTokenRequest {
             description = "The refresh token issued to the client during login.",
             example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     private String refreshToken;
+
 }

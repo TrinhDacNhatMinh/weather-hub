@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 
 @Data
 @Schema(description = "Request body used for updating a weather station.")
-public class StationRequest {
+public class UpdateStationRequest {
 
     @Size(max = 50, message = "Name must be at most 50 characters")
     @Schema(description = "Name of the station.", example = "Device A", nullable = true)

@@ -1,14 +1,10 @@
 package com.nhom.weather_hub.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Schema(description = "Response containing weather data stored in the system.")
 public class WeatherDataResponse {
 
@@ -16,19 +12,19 @@ public class WeatherDataResponse {
     private Long id;
 
     @Schema(description = "Temperature in Celsius.", example = "28.7")
-    private Double temperature;
+    private Float temperature;
 
     @Schema(description = "Humidity percentage (0-100%).", example = "65.2")
-    private Double humidity;
+    private Float humidity;
 
     @Schema(description = "Wind speed in m/s.", example = "1.8")
-    private Double windSpeed;
+    private Float windSpeed;
 
     @Schema(description = "Rainfall level in mm.", example = "12")
-    private Double rainfall;
+    private Float rainfall;
 
     @Schema(description = "Dust concentration (PM value).", example = "42")
-    private Double dust;
+    private Float dust;
 
     @Schema(description = "Timestamp when the data was recorded.", example = "2025-11-20T10:20:00Z")
     private Instant recordAt;
