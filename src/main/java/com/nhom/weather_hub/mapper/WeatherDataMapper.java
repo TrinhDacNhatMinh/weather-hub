@@ -11,6 +11,7 @@ public interface WeatherDataMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "station", ignore = true)
+    @Mapping(target = "alert", ignore = true)
     public WeatherData toEntity(WeatherDataRequest request);
 
     @Mapping(target = "stationId", source = "station.id")
