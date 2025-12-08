@@ -42,7 +42,7 @@ public class UserServiceImpl implements UserService {
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),         // username
                 user.getPassword(),         // encoded password
-                user.isActive(),            // enabled status
+                user.getActive(),            // enabled status
                 true,                       // accountNonExpired
                 true,                       // credentialsNonExpired
                 true,                       // accountNonLocked

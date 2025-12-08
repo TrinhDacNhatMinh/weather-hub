@@ -17,9 +17,11 @@ import com.nhom.weather_hub.repository.VerificationTokenRepository;
 import com.nhom.weather_hub.security.JwtUtil;
 import com.nhom.weather_hub.service.AuthService;
 import com.nhom.weather_hub.service.MailService;
+import com.nhom.weather_hub.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final MailService mailService;
+    private final UserService userService;
 
     @Value("${jwt.refresh-expiration}")
     private long refreshExpiration;
@@ -50,8 +53,8 @@ public class AuthServiceImpl implements AuthService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BadCredentialsException("Invalid username or password");
         }
-        if (!user.isActive()) {
-            throw new BadCredentialsException("Account is inactive");
+        if (!user.getActive()) {
+            throw new DisabledException("Account is not active");
         }
         refreshTokenRepository.deleteByUser(user);
 
@@ -66,6 +69,20 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenRepository.save(tokenEntity);
 
         return new AuthResponse(accessToken, refreshToken);
+    }
+
+    @Override
+    @Transactional
+    public void logout(String authHeader) {
+        String token = extractToken(authHeader);
+        refreshTokenRepository.deleteByToken(token);
+    }
+
+    private String extractToken(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new BadCredentialsException("Invalid Authorization header");
+        }
+        return authHeader.substring(7);
     }
 
     @Override
@@ -136,7 +153,7 @@ public class AuthServiceImpl implements AuthService {
         return new RegisterResponse(
                 user.getId(),
                 user.getEmail(),
-                user.isActive(),
+                user.getActive(),
                 "Register successfully. Please check your email to verify."
         );
     }
@@ -144,8 +161,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public VerifyResponse verifyEmail(String token) {
-        VerificationToken verificationToken = verificationTokenRepository
-                .findByToken(token)
+        VerificationToken verificationToken = verificationTokenRepository.findByToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid verify token"));
         if (verificationToken.getExpiryDate().isBefore(Instant.now())) {
             throw new IllegalArgumentException("Token expired");

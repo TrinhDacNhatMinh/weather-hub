@@ -8,7 +8,9 @@ import com.nhom.weather_hub.entity.WeatherData;
 import com.nhom.weather_hub.mapper.WeatherDataMapper;
 import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.repository.WeatherDataRepository;
+import com.nhom.weather_hub.service.AlertService;
 import com.nhom.weather_hub.service.WeatherDataService;
+import com.nhom.weather_hub.service.WebSocketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +28,8 @@ public class WeatherDataServiceImpl implements WeatherDataService {
     private final WeatherDataRepository weatherDataRepository;
     private final StationRepository stationRepository;
     private final WeatherDataMapper weatherDataMapper;
+    private final AlertService alertService;
+    private final WebSocketService webSocketService;
 
     @Override
     @Transactional
@@ -42,6 +46,13 @@ public class WeatherDataServiceImpl implements WeatherDataService {
                 .station(station)
                 .build();
         weatherDataRepository.save(weatherData);
+
+        alertService.checkAndCreateAlert(weatherData);
+
+        WeatherDataResponse response = weatherDataMapper.toResponse(weatherData);
+
+        webSocketService.sendWeatherData(station.getId(), response);
+
         return weatherDataMapper.toResponse(weatherData);
     }
 
@@ -83,7 +94,7 @@ public class WeatherDataServiceImpl implements WeatherDataService {
     @Override
     @Transactional
     public void deleteByStation(Long stationId) {
-        if (!weatherDataRepository.existsById(stationId)) {
+        if (!stationRepository.existsById(stationId)) {
             throw new RuntimeException("Station not found");
         }
         weatherDataRepository.deleteByStationId(stationId);
