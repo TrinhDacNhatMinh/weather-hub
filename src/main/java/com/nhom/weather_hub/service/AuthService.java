@@ -4,12 +4,13 @@ import com.nhom.weather_hub.dto.request.LoginRequest;
 import com.nhom.weather_hub.dto.request.RefreshTokenRequest;
 import com.nhom.weather_hub.dto.request.RegisterRequest;
 import com.nhom.weather_hub.dto.response.AuthResponse;
+import com.nhom.weather_hub.dto.response.LoginResponse;
 import com.nhom.weather_hub.dto.response.RegisterResponse;
 import com.nhom.weather_hub.dto.response.VerifyResponse;
 
 public interface AuthService {
 
-    public AuthResponse login(LoginRequest request);
+    public LoginResponse login(LoginRequest request);
 
     public void logout(String authHeader);
 
