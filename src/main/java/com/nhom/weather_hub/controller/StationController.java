@@ -1,8 +1,10 @@
 package com.nhom.weather_hub.controller;
 
-import com.nhom.weather_hub.dto.request.StationRequest;
+import com.nhom.weather_hub.dto.request.AddStationRequest;
+import com.nhom.weather_hub.dto.request.UpdateStationRequest;
 import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.StationResponse;
+import com.nhom.weather_hub.entity.User;
 import com.nhom.weather_hub.service.StationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,7 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/stations")
 @RequiredArgsConstructor
-@Tag(name = "Station API",description = "APIs for managing weather stations: creating, updating, deleting, listing, and retrieving by user or API key.")
+@Tag(name = "Station API", description = "APIs for managing weather stations: creating, updating, deleting, listing, and retrieving by user or API key.")
 public class StationController {
 
     private final StationService stationService;
@@ -35,31 +37,45 @@ public class StationController {
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping
-    @Operation(summary = "Get list of stations", description = "Retrieve a paginated list of stations with page and size parameters.")
-    public ResponseEntity<PageResponse<StationResponse>> getStations(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        PageResponse<StationResponse> responses = stationService.getStations(page, size);
-        return ResponseEntity.ok(responses);
+    @PutMapping("/attach")
+    public ResponseEntity<StationResponse> addStation(@RequestBody AddStationRequest request) {
+        StationResponse response = stationService.addStation(request);
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/user/{userId}")
-    @Operation(summary = "Get stations by user", description = "Retrieve all stations belonging to a specific user, with pagination support.")
-    public ResponseEntity<PageResponse<StationResponse>> getStationsByUser(
-            @PathVariable Long userId,
+    @GetMapping("/user/my-stations")
+    @Operation(summary = "", description = "")
+    public ResponseEntity<PageResponse<StationResponse>> getMyStations(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        PageResponse<StationResponse> responses = stationService.getStationsByUser(userId, page, size);
-        return ResponseEntity.ok(responses);
+        PageResponse<StationResponse> response = stationService.getMyStations(page, size);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/public")
+    public ResponseEntity<PageResponse<StationResponse>> getPublicStations(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        PageResponse<StationResponse> response = stationService.getPublicStations(page, size);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/all")
+    @Operation(summary = "Get list of stations", description = "Retrieve a paginated list of stations with page and size parameters.")
+    public ResponseEntity<PageResponse<StationResponse>> getAllStations(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        PageResponse<StationResponse> response = stationService.getAllStations(page, size);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get station by ID", description = "Retrieve detailed information of a station using its ID.")
     public ResponseEntity<StationResponse> getStationById(@PathVariable Long id) {
-        StationResponse response = stationService.getStationById(id);
+      StationResponse response = stationService.getStationById(id);
         return ResponseEntity.ok(response);
     }
 
@@ -71,14 +87,27 @@ public class StationController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update station", description = "Update the details of a station using its ID and a StationRequest payload.")
+    @Operation(summary = "Update station", description = "Update the details of a station using its ID and a UpdateStationRequest payload.")
     public ResponseEntity<StationResponse> updateStation(
             @PathVariable Long id,
-            @Valid @RequestBody StationRequest updateRequest
+            @Valid @RequestBody UpdateStationRequest request
     ) {
-        StationResponse response = stationService.updateStation(id, updateRequest);
+        StationResponse response = stationService.updateStation(id, request);
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/{id}/sharing")
+    public ResponseEntity<StationResponse> updateStationSharing(@PathVariable Long id) {
+        StationResponse response = stationService.updateStationSharing(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}/user")
+    public ResponseEntity<StationResponse> detachStation(@PathVariable Long id) {
+        StationResponse response = stationService.detachStation(id);
+        return ResponseEntity.ok(response);
+    }
+
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete station", description = "Delete a station by its ID. Returns HTTP 204 No Content.")

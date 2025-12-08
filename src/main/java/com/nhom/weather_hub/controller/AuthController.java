@@ -30,6 +30,12 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authHeader) {
+        authService.logout(authHeader);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/refresh")
     @Operation(summary = "Refresh token", description = "Generate a new access token and refresh token using a valid refresh token.")
     public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
