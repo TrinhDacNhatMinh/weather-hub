@@ -1,21 +1,31 @@
 package com.nhom.weather_hub.mapper;
 
-import com.nhom.weather_hub.dto.request.WeatherDataRequest;
 import com.nhom.weather_hub.dto.response.WeatherDataResponse;
 import com.nhom.weather_hub.entity.WeatherData;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
-public interface WeatherDataMapper {
+@Component
+public class WeatherDataMapper {
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "station", ignore = true)
-    @Mapping(target = "alert", ignore = true)
-    public WeatherData toEntity(WeatherDataRequest request);
+    public WeatherDataResponse toResponse(WeatherData entity) {
+        if (entity == null) {
+            return null;
+        }
 
-    @Mapping(target = "stationId", source = "station.id")
-    @Mapping(target = "stationName", source = "station.name")
-    public WeatherDataResponse toResponse(WeatherData entity);
+        WeatherDataResponse weatherDataResponse = new WeatherDataResponse();
+        weatherDataResponse.setId(entity.getId());
+        weatherDataResponse.setTemperature(entity.getTemperature());
+        weatherDataResponse.setHumidity(entity.getHumidity());
+        weatherDataResponse.setRainfall(entity.getRainfall());
+        weatherDataResponse.setWindSpeed(entity.getWindSpeed());
+        weatherDataResponse.setDust(entity.getDust());
+        weatherDataResponse.setRecordAt(entity.getRecordAt());
+        if (entity.getStation() != null) {
+            weatherDataResponse.setStationId(entity.getStation().getId());
+            weatherDataResponse.setStationName(entity.getStation().getName());
+        }
+
+        return weatherDataResponse;
+    }
 
 }

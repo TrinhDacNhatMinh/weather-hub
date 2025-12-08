@@ -2,15 +2,30 @@ package com.nhom.weather_hub.mapper;
 
 import com.nhom.weather_hub.dto.response.AlertResponse;
 import com.nhom.weather_hub.entity.Alert;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
-public interface AlertMapper {
+@Component
+public class AlertMapper {
 
-    @Mapping(target = "weatherDataId", source = "weatherData.id")
-    @Mapping(target = "stationId", source = "weatherData.station.id")
-    @Mapping(target = "stationName", source = "weatherData.station.name")
-    public AlertResponse toResponse(Alert entity);
+    public AlertResponse toResponse(Alert entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        AlertResponse alertResponse = new AlertResponse();
+        alertResponse.setId(entity.getId());
+        alertResponse.setMessage(entity.getMessage());
+        alertResponse.setStatus(entity.getStatus().toString());
+        alertResponse.setCreatedAt(entity.getCreatedAt());
+        if (entity.getWeatherData() != null) {
+            alertResponse.setWeatherDataId(entity.getWeatherData().getId());
+            if (entity.getWeatherData().getStation() != null) {
+                alertResponse.setStationId(entity.getWeatherData().getStation().getId());
+                alertResponse.setStationName(entity.getWeatherData().getStation().getName());
+            }
+        }
+
+        return alertResponse;
+    }
 
 }
