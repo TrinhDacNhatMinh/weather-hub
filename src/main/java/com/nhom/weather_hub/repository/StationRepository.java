@@ -15,6 +15,8 @@ public interface StationRepository extends JpaRepository<Station, Long> {
 
     public Page<Station> findByUserId(Long userId, Pageable pageable);
 
+    public Page<Station> findByIsPublicTrue(Pageable pageable);
+
     public boolean existsByApiKey(String apiKey);
 
 }
