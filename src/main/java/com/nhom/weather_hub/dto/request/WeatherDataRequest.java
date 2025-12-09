@@ -11,6 +11,8 @@ import java.time.Instant;
 @Schema(description = "Payload sent by ESP32 containing weather sensor data.")
 public class WeatherDataRequest {
 
+    private String apiKey;
+
     @Schema(description = "Temperature in Celsius.", example = "28.5")
     private Float temperature;
 

@@ -1,5 +1,6 @@
 package com.nhom.weather_hub.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nhom.weather_hub.dto.request.WeatherDataRequest;
 import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.WeatherDataResponse;
@@ -8,7 +9,7 @@ import java.time.Instant;
 
 public interface WeatherDataService {
 
-    public WeatherDataResponse createWeatherData(WeatherDataRequest request, String apiKey);
+    public void handleIncomingMqttData(String payload) throws JsonProcessingException;
 
     public WeatherDataResponse getWeatherDataById(Long id);
 

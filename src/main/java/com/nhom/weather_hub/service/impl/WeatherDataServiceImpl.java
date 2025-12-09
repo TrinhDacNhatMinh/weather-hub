@@ -1,10 +1,14 @@
 package com.nhom.weather_hub.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhom.weather_hub.dto.request.WeatherDataRequest;
+import com.nhom.weather_hub.dto.response.AlertResponse;
 import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.WeatherDataResponse;
 import com.nhom.weather_hub.entity.Station;
 import com.nhom.weather_hub.entity.WeatherData;
+import com.nhom.weather_hub.exception.ResourceNotFoundException;
 import com.nhom.weather_hub.mapper.WeatherDataMapper;
 import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.repository.WeatherDataRepository;
@@ -30,30 +34,43 @@ public class WeatherDataServiceImpl implements WeatherDataService {
     private final WeatherDataMapper weatherDataMapper;
     private final AlertService alertService;
     private final WebSocketService webSocketService;
+    private final ObjectMapper objectMapper;
 
     @Override
-    @Transactional
-    public WeatherDataResponse createWeatherData(WeatherDataRequest request, String apiKey) {
-        Station station = stationRepository.findByApiKey(apiKey)
-                .orElseThrow(() -> new RuntimeException("Station not found"));
-        WeatherData weatherData = WeatherData.builder()
-                .temperature(request.getTemperature())
-                .humidity(request.getHumidity())
-                .windSpeed(request.getWindSpeed())
-                .rainfall(request.getRainfall())
-                .dust(request.getDust())
-                .recordAt(request.getRecordAt())
-                .station(station)
-                .build();
-        weatherDataRepository.save(weatherData);
+    public void handleIncomingMqttData(String payload) throws JsonProcessingException {
 
-        alertService.checkAndCreateAlert(weatherData);
+        WeatherDataRequest request = objectMapper.readValue(payload, WeatherDataRequest.class);
 
-        WeatherDataResponse response = weatherDataMapper.toResponse(weatherData);
 
-        webSocketService.sendWeatherData(station.getId(), response);
+        Instant recordTime = request.getRecordAt();
+        Instant now = Instant.now();
 
-        return weatherDataMapper.toResponse(weatherData);
+        // Discard data older than 30 seconds (Stale data check)
+        if (recordTime.isBefore(now.minusSeconds(30))) {
+            System.out.println("Ignore: " + payload);
+            return;
+        }
+
+
+        // Validate API key
+        Station station = stationRepository.findByApiKey(request.getApiKey())
+                .orElseThrow(() -> new ResourceNotFoundException("Station", "api key", request.getApiKey()));
+
+        // Persist WeatherData to database
+        WeatherData data = weatherDataMapper.toEntity(request);
+        data.setStation(station);
+        weatherDataRepository.save(data);
+
+        // Check for alert
+        AlertResponse alert = alertService.checkAndCreateAlert(data);
+
+        // Push real-time updates via WebSocket
+        WeatherDataResponse weatherDataResponse = weatherDataMapper.toResponse(data);
+        webSocketService.sendWeatherData(station.getId(), weatherDataResponse);
+
+        if (alert != null) {
+            webSocketService.sendAlert(station.getId(), alert);
+        }
     }
 
     @Override
