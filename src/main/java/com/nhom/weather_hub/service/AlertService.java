@@ -7,7 +7,7 @@ import com.nhom.weather_hub.entity.WeatherData;
 
 public interface AlertService {
 
-    public void checkAndCreateAlert(WeatherData data);
+    public AlertResponse checkAndCreateAlert(WeatherData data);
 
     public AlertResponse getById(Long id);
 

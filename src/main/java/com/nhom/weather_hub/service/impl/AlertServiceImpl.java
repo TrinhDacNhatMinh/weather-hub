@@ -34,17 +34,11 @@ public class AlertServiceImpl implements AlertService {
     private final WebSocketService webSocketService;
     private final UserService userService;
 
-    public enum ThresholdStatus {
-        BELOW_MIN,
-        NORMAL,
-        ABOVE_MAX
-    }
-
     @Override
     @Transactional
-    public void checkAndCreateAlert(WeatherData data) {
+    public AlertResponse checkAndCreateAlert(WeatherData data) {
         Threshold threshold = thresholdRepository.findByStationId(data.getStation().getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Station", data.getStation().getId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Station", "id", data.getStation().getId()));
 
         int temperatureStatus = checkThreshold(
                 threshold.getTemperatureActive(),
@@ -83,7 +77,7 @@ public class AlertServiceImpl implements AlertService {
                 rainfallStatus == 0 &&
                 windSpeedStatus == 0 &&
                 dustStatus == 0) {
-            return;
+            return null;
         }
 
         Alert alert = new Alert();
@@ -100,6 +94,7 @@ public class AlertServiceImpl implements AlertService {
 
         alert.setStatus(Alert.Status.SENT);
         alertRepository.save(alert);
+        return alertResponse;
     }
 
     private int checkThreshold(boolean active, Float value, Float min, Float max) {
@@ -124,10 +119,10 @@ public class AlertServiceImpl implements AlertService {
         List<String> messages = new ArrayList<>();
 
         if (temperature == -1) messages.add("Temperature below minimum");
-        if (temperature == 1)  messages.add("Temperature above maximum");
+        if (temperature == 1) messages.add("Temperature above maximum");
 
         if (humidity == -1) messages.add("Humidity below minimum");
-        if (humidity == 1)  messages.add("Humidity above maximum");
+        if (humidity == 1) messages.add("Humidity above maximum");
 
         if (rainfall == 1) messages.add("Rainfall above maximum");
 
@@ -142,7 +137,7 @@ public class AlertServiceImpl implements AlertService {
     public AlertResponse getById(Long id) {
         return alertRepository.findById(id)
                 .map(alertMapper::toResponse)
-                .orElseThrow(() -> new ResourceNotFoundException("Alert", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Alert", "id", id));
     }
 
     @Override
@@ -168,7 +163,7 @@ public class AlertServiceImpl implements AlertService {
     @Override
     @Transactional
     public AlertResponse updateStatus(Long id, Alert.Status status) {
-        Alert alert = alertRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Alert", id));
+        Alert alert = alertRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Alert", "id", id));
         alert.setStatus(status);
         Alert saved = alertRepository.save(alert);
         return alertMapper.toResponse(saved);
@@ -178,7 +173,7 @@ public class AlertServiceImpl implements AlertService {
     @Transactional
     public void deleteAlert(Long id) {
         if (!alertRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Alert", id);
+            throw new ResourceNotFoundException("Alert", "id", id);
         }
         alertRepository.deleteById(id);
     }
@@ -187,6 +182,12 @@ public class AlertServiceImpl implements AlertService {
     @Transactional
     public void deleteAllByUser(Long userId) {
         alertRepository.deleteAllByWeatherData_Station_User_Id(userId);
+    }
+
+    public enum ThresholdStatus {
+        BELOW_MIN,
+        NORMAL,
+        ABOVE_MAX
     }
 
 }
