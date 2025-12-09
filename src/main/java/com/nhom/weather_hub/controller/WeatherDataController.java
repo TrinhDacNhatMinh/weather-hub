@@ -1,12 +1,10 @@
 package com.nhom.weather_hub.controller;
 
-import com.nhom.weather_hub.dto.request.WeatherDataRequest;
 import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.WeatherDataResponse;
 import com.nhom.weather_hub.service.WeatherDataService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,15 +19,6 @@ import java.util.Optional;
 public class WeatherDataController {
 
     private final WeatherDataService weatherDataService;
-
-    @PostMapping
-    @Operation(summary = "Submit weather data", description = "This endpoint is used by IoT weather stations to send weather data to the backend.")
-    public ResponseEntity<WeatherDataResponse> createWeatherData(
-            @Valid @RequestBody WeatherDataRequest request,
-            @RequestHeader("X-API-KEY") String apiKey) {
-        WeatherDataResponse response = weatherDataService.createWeatherData(request, apiKey);
-        return ResponseEntity.ok(response);
-    }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get weather data by ID", description = "Retrieve a single weather data record using its unique ID.")
