@@ -4,6 +4,7 @@ import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.UserResponse;
 import com.nhom.weather_hub.entity.User;
 import com.nhom.weather_hub.mapper.UserMapper;
+import com.nhom.weather_hub.projection.UserWithStationCount;
 import com.nhom.weather_hub.repository.UserRepository;
 import com.nhom.weather_hub.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -63,10 +64,19 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public PageResponse<UserResponse> getAllUsers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<User> userPage = userRepository.findAll(pageable);
+        Page<UserWithStationCount> userPage = userRepository.findUserWithStationCount(pageable);
         List<UserResponse> content = userPage.getContent()
                 .stream()
-                .map(userMapper::toResponse)
+                .map(p -> {
+                    UserResponse response = new UserResponse();
+                    response.setId(p.getId());
+                    response.setName(p.getName());
+                    response.setUsername(p.getUsername());
+                    response.setEmail(p.getEmail());
+                    response.setActive(p.getActive());
+                    response.setStationCount(p.getStationCount());
+                    return response;
+                })
                 .toList();
         return new PageResponse<>(
                 content,

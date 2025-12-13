@@ -15,4 +15,6 @@ public class UserResponse {
 
     private Boolean active;
 
+    private Long stationCount;
+
 }
