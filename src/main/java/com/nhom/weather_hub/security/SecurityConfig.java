@@ -46,8 +46,10 @@ public class SecurityConfig {
                                 "/api/auth/**"
                         ).permitAll()
                         .requestMatchers(
-                                 "/api/stations/**"
+                                "/api/stations/**"
                         ).hasRole("ADMIN")
+                        .requestMatchers("/api/users/**")
+                        .hasRole("ADMIN")
                         .requestMatchers(
                                 HttpMethod.POST, "/api/weather-data/**"
                         ).permitAll()
