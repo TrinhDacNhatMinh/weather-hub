@@ -1,16 +1,24 @@
 package com.nhom.weather_hub.service.impl;
 
+import com.nhom.weather_hub.dto.response.PageResponse;
+import com.nhom.weather_hub.dto.response.UserResponse;
 import com.nhom.weather_hub.entity.User;
+import com.nhom.weather_hub.mapper.UserMapper;
 import com.nhom.weather_hub.repository.UserRepository;
 import com.nhom.weather_hub.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,6 +27,7 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @Override
     public User getCurrentUser() {
@@ -47,6 +56,25 @@ public class UserServiceImpl implements UserService {
                 true,                       // credentialsNonExpired
                 true,                       // accountNonLocked
                 authorities                 // user's authorities (roles)
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<UserResponse> getAllUsers(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<User> userPage = userRepository.findAll(pageable);
+        List<UserResponse> content = userPage.getContent()
+                .stream()
+                .map(userMapper::toResponse)
+                .toList();
+        return new PageResponse<>(
+                content,
+                userPage.getNumber(),
+                userPage.getSize(),
+                userPage.getTotalElements(),
+                userPage.getTotalPages(),
+                userPage.isLast()
         );
     }
 }
