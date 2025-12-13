@@ -14,15 +14,15 @@ public class WebSocketServiceImpl implements WebSocketService {
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
-    public void sendAlert(Long stationId, AlertResponse alertResponse) {
-        String destination = "/topic/alerts/" + stationId;
-        messagingTemplate.convertAndSend(destination, alertResponse);
+    public void sendWeatherData(Long stationId, WeatherDataResponse weatherDataResponse) {
+        String destination = "/topic/stations/" + stationId + "/weather";
+        messagingTemplate.convertAndSend(destination, weatherDataResponse);
     }
 
     @Override
-    public void sendWeatherData(Long stationId, WeatherDataResponse weatherDataResponse) {
-        String destination = "/topic/weather" + stationId;
-        messagingTemplate.convertAndSend(destination, weatherDataResponse);
+    public void sendAlert(Long stationId, AlertResponse alertResponse) {
+        String destination = "/topic/stations/" + stationId + "/alerts";
+        messagingTemplate.convertAndSend(destination, alertResponse);
     }
 
 }

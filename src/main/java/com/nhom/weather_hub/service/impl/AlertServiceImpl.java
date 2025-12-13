@@ -3,21 +3,22 @@ package com.nhom.weather_hub.service.impl;
 import com.nhom.weather_hub.dto.response.AlertResponse;
 import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.entity.Alert;
-import com.nhom.weather_hub.entity.Station;
 import com.nhom.weather_hub.entity.Threshold;
 import com.nhom.weather_hub.entity.WeatherData;
+import com.nhom.weather_hub.event.AlertCreatedEvent;
 import com.nhom.weather_hub.exception.ResourceNotFoundException;
 import com.nhom.weather_hub.mapper.AlertMapper;
 import com.nhom.weather_hub.repository.AlertRepository;
 import com.nhom.weather_hub.repository.ThresholdRepository;
 import com.nhom.weather_hub.service.AlertService;
 import com.nhom.weather_hub.service.UserService;
-import com.nhom.weather_hub.service.WebSocketService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -31,14 +32,15 @@ public class AlertServiceImpl implements AlertService {
     private final AlertRepository alertRepository;
     private final ThresholdRepository thresholdRepository;
     private final AlertMapper alertMapper;
-    private final WebSocketService webSocketService;
     private final UserService userService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public AlertResponse checkAndCreateAlert(WeatherData data) {
         Threshold threshold = thresholdRepository.findByStationId(data.getStation().getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Station", "id", data.getStation().getId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Threshold not found with station id " + data.getStation().getId()));
 
         int temperatureStatus = checkThreshold(
                 threshold.getTemperatureActive(),
@@ -81,7 +83,8 @@ public class AlertServiceImpl implements AlertService {
         }
 
         Alert alert = new Alert();
-        alert.setMessage(generateMessage(temperatureStatus, humidityStatus, rainfallStatus, windSpeedStatus, dustStatus));
+        alert.setMessage(generateMessage(
+                temperatureStatus, humidityStatus, rainfallStatus, windSpeedStatus, dustStatus));
         alert.setStatus(Alert.Status.NEW);
         alert.setCreatedAt(Instant.now());
         alert.setWeatherData(data);
@@ -90,10 +93,8 @@ public class AlertServiceImpl implements AlertService {
 
         Long stationId = alert.getWeatherData().getStation().getId();
         AlertResponse alertResponse = alertMapper.toResponse(alert);
-        webSocketService.sendAlert(stationId, alertResponse);
+        eventPublisher.publishEvent(new AlertCreatedEvent(stationId, alertResponse));
 
-        alert.setStatus(Alert.Status.SENT);
-        alertRepository.save(alert);
         return alertResponse;
     }
 
@@ -137,7 +138,7 @@ public class AlertServiceImpl implements AlertService {
     public AlertResponse getById(Long id) {
         return alertRepository.findById(id)
                 .map(alertMapper::toResponse)
-                .orElseThrow(() -> new ResourceNotFoundException("Alert", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Alert not found with id " + id));
     }
 
     @Override
@@ -163,7 +164,7 @@ public class AlertServiceImpl implements AlertService {
     @Override
     @Transactional
     public AlertResponse updateStatus(Long id, Alert.Status status) {
-        Alert alert = alertRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Alert", "id", id));
+        Alert alert = alertRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Alert not found with id " + id));
         alert.setStatus(status);
         Alert saved = alertRepository.save(alert);
         return alertMapper.toResponse(saved);
@@ -173,7 +174,7 @@ public class AlertServiceImpl implements AlertService {
     @Transactional
     public void deleteAlert(Long id) {
         if (!alertRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Alert", "id", id);
+            throw new ResourceNotFoundException("Alert not found with id " + id);
         }
         alertRepository.deleteById(id);
     }
@@ -182,12 +183,6 @@ public class AlertServiceImpl implements AlertService {
     @Transactional
     public void deleteAllByUser(Long userId) {
         alertRepository.deleteAllByWeatherData_Station_User_Id(userId);
-    }
-
-    public enum ThresholdStatus {
-        BELOW_MIN,
-        NORMAL,
-        ABOVE_MAX
     }
 
 }
