@@ -18,6 +18,8 @@ public interface StationService {
 
     public PageResponse<StationResponse> getMyStations(int page, int size);
 
+    public PageResponse<StationResponse> getStationsByUserId(Long userId, int page, int size);
+
     public PageResponse<StationResponse> getPublicStations(int page, int size);
 
     public PageResponse<StationResponse> getAllStations(int page, int size);

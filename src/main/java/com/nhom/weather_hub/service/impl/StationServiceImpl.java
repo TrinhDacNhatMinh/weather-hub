@@ -97,6 +97,25 @@ public class StationServiceImpl implements StationService {
 
     @Override
     @Transactional(readOnly = true)
+    public PageResponse<StationResponse> getStationsByUserId(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Station> stationPage = stationRepository.findByUserId(userId, pageable);
+        List<StationResponse> content = stationPage.getContent()
+                .stream()
+                .map(stationMapper::toResponse)
+                .toList();
+        return new PageResponse<>(
+                content,
+                stationPage.getNumber(),
+                stationPage.getSize(),
+                stationPage.getTotalElements(),
+                stationPage.getTotalPages(),
+                stationPage.isLast()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public PageResponse<StationResponse> getPublicStations(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Station> stationPage = stationRepository.findByIsPublicTrue(pageable);

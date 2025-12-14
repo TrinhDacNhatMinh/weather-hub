@@ -53,6 +53,16 @@ public class StationController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<PageResponse<StationResponse>> getStationByUserId(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        PageResponse<StationResponse> response = stationService.getStationsByUserId(userId, page, size);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/public")
     public ResponseEntity<PageResponse<StationResponse>> getPublicStations(
             @RequestParam(defaultValue = "0") int page,
