@@ -1,5 +1,7 @@
 package com.nhom.weather_hub.service.impl;
 
+import com.nhom.weather_hub.domain.enums.AccessChannel;
+import com.nhom.weather_hub.domain.policy.LoginPolicy;
 import com.nhom.weather_hub.dto.request.LoginRequest;
 import com.nhom.weather_hub.dto.request.RefreshTokenRequest;
 import com.nhom.weather_hub.dto.request.RegisterRequest;
@@ -57,6 +59,7 @@ public class AuthServiceImpl implements AuthService {
         if (!user.getActive()) {
             throw new DisabledException("Account is not active");
         }
+        LoginPolicy.validate(user, request.getAccessChannel());
         refreshTokenRepository.deleteByUser(user);
 
         String accessToken = jwtUtil.generateAccessToken(user.getUsername());

@@ -1,7 +1,9 @@
 package com.nhom.weather_hub.dto.request;
 
+import com.nhom.weather_hub.domain.enums.AccessChannel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
@@ -15,5 +17,8 @@ public class LoginRequest {
     @NotBlank
     @Schema(description = "The password of the account.", example = "abc456")
     private String password;
+
+    @NotNull
+    private AccessChannel accessChannel;
 
 }
