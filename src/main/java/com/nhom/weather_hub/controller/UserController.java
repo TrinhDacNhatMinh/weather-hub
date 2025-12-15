@@ -5,10 +5,7 @@ import com.nhom.weather_hub.dto.response.UserResponse;
 import com.nhom.weather_hub.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users")
@@ -23,6 +20,18 @@ public class UserController {
             @RequestParam(defaultValue = "10") int size
     ) {
         PageResponse<UserResponse> response = userService.getAllUsers(page, size);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/lock")
+    public ResponseEntity<UserResponse> lockUser(@PathVariable Long id) {
+        UserResponse response = userService.lockUser(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/unlock")
+    public ResponseEntity<UserResponse> unlockUser(@PathVariable Long id) {
+        UserResponse response = userService.unlockUser(id);
         return ResponseEntity.ok(response);
     }
 

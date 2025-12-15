@@ -3,6 +3,7 @@ package com.nhom.weather_hub.service.impl;
 import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.UserResponse;
 import com.nhom.weather_hub.entity.User;
+import com.nhom.weather_hub.exception.ResourceNotFoundException;
 import com.nhom.weather_hub.mapper.UserMapper;
 import com.nhom.weather_hub.projection.UserWithStationCount;
 import com.nhom.weather_hub.repository.UserRepository;
@@ -87,4 +88,33 @@ public class UserServiceImpl implements UserService {
                 userPage.isLast()
         );
     }
+
+    @Override
+    @Transactional
+    public UserResponse lockUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + id));
+
+        if (user.getActive()) {
+            user.setActive(false);
+            userRepository.save(user);
+        }
+
+        return userMapper.toResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse unlockUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + id));
+
+        if (!user.getActive()) {
+            user.setActive(true);
+            userRepository.save(user);
+        }
+
+        return userMapper.toResponse(user);
+    }
+
 }
