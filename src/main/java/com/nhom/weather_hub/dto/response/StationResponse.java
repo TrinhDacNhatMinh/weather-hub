@@ -40,6 +40,8 @@ public class StationResponse {
     private Boolean isPublic;
 
     @Schema(description = "ID of the user who owns the station.", example = "5")
-    private Long userId;
+    private Long ownerId;
+
+    private String ownerName;
 
 }

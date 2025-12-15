@@ -25,7 +25,8 @@ public class StationMapper {
         stationResponse.setActive(entity.getActive());
         stationResponse.setIsPublic(entity.getIsPublic());
         if (entity.getUser() != null) {
-            stationResponse.setUserId(entity.getUser().getId());
+            stationResponse.setOwnerId(entity.getUser().getId());
+            stationResponse.setOwnerName(entity.getUser().getName());
         }
 
         return stationResponse;
