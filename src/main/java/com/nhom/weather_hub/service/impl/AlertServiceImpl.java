@@ -1,11 +1,12 @@
 package com.nhom.weather_hub.service.impl;
 
+import com.nhom.weather_hub.domain.enums.ThresholdStatus;
+import com.nhom.weather_hub.domain.records.ThresholdEvaluation;
 import com.nhom.weather_hub.dto.response.AlertResponse;
 import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.entity.Alert;
 import com.nhom.weather_hub.entity.Threshold;
 import com.nhom.weather_hub.entity.WeatherData;
-import com.nhom.weather_hub.event.AlertCreatedEvent;
 import com.nhom.weather_hub.exception.ResourceNotFoundException;
 import com.nhom.weather_hub.mapper.AlertMapper;
 import com.nhom.weather_hub.repository.AlertRepository;
@@ -18,12 +19,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -36,105 +37,110 @@ public class AlertServiceImpl implements AlertService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public AlertResponse checkAndCreateAlert(WeatherData data) {
+    @Transactional(readOnly = true)
+    public Optional<ThresholdEvaluation> evaluateThresholds(WeatherData data) {
         Threshold threshold = thresholdRepository.findByStationId(data.getStation().getId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Threshold not found with station id " + data.getStation().getId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Threshold not found"));
 
-        int temperatureStatus = checkThreshold(
-                threshold.getTemperatureActive(),
-                data.getTemperature(),
-                threshold.getTemperatureMin(),
-                threshold.getTemperatureMax()
+        ThresholdStatus temperatureStatus = checkThreshold(
+                        threshold.getTemperatureActive(),
+                        data.getTemperature(),
+                        threshold.getTemperatureMin(),
+                        threshold.getTemperatureMax()
         );
-
-        int humidityStatus = checkThreshold(
+        ThresholdStatus humidityStatus = checkThreshold(
                 threshold.getHumidityActive(),
                 data.getHumidity(),
                 threshold.getHumidityMin(),
                 threshold.getHumidityMax()
         );
-
-        int rainfallStatus = checkThreshold(
-                threshold.getRainfallActive(),
-                data.getRainfall(),
-                threshold.getRainfallMax()
-        );
-
-        int windSpeedStatus = checkThreshold(
+        ThresholdStatus windSpeedStatus = checkThreshold(
                 threshold.getWindSpeedActive(),
                 data.getWindSpeed(),
                 threshold.getWindSpeedMax()
         );
-
-        int dustStatus = checkThreshold(
+        ThresholdStatus rainfallStatus = checkThreshold(
+                threshold.getRainfallActive(),
+                data.getRainfall(),
+                threshold.getRainfallMax()
+        );
+        ThresholdStatus dustStatus = checkThreshold(
                 threshold.getDustActive(),
                 data.getDust(),
                 threshold.getDustMax()
         );
 
-        if (temperatureStatus == 0 &&
-                humidityStatus == 0 &&
-                rainfallStatus == 0 &&
-                windSpeedStatus == 0 &&
-                dustStatus == 0) {
-            return null;
-        }
+        boolean hasAlert = temperatureStatus != ThresholdStatus.NORMAL ||
+                        humidityStatus != ThresholdStatus.NORMAL ||
+                        windSpeedStatus != ThresholdStatus.NORMAL ||
+                        rainfallStatus != ThresholdStatus.NORMAL ||
+                        dustStatus != ThresholdStatus.NORMAL;
 
+        if (!hasAlert) return Optional.empty();
+
+        ThresholdEvaluation evaluation = new ThresholdEvaluation(temperatureStatus, humidityStatus, windSpeedStatus, rainfallStatus, dustStatus);
+        return Optional.of(evaluation);
+    }
+
+    private ThresholdStatus checkThreshold(boolean active, Float value, Float min, Float max) {
+        if (!active || value == null) return ThresholdStatus.NORMAL;
+        if (value < min) return ThresholdStatus.BELOW_MIN;
+        if (value > max) return ThresholdStatus.ABOVE_MAX;
+        return ThresholdStatus.NORMAL;
+    }
+
+    private ThresholdStatus checkThreshold(boolean active, Float value, Float max) {
+        if (!active || value == null) return ThresholdStatus.NORMAL;
+        if (value > max) return ThresholdStatus.ABOVE_MAX;
+        return ThresholdStatus.NORMAL;
+    }
+
+
+    @Override
+    @Transactional
+    public Alert createAlert(WeatherData data, ThresholdEvaluation evaluation) {
         Alert alert = new Alert();
-        alert.setMessage(generateMessage(
-                temperatureStatus, humidityStatus, rainfallStatus, windSpeedStatus, dustStatus));
+        alert.setMessage(generateMessage(evaluation));
         alert.setStatus(Alert.Status.NEW);
         alert.setCreatedAt(Instant.now());
         alert.setWeatherData(data);
-
         alertRepository.save(alert);
-
-        Long stationId = alert.getWeatherData().getStation().getId();
-        AlertResponse alertResponse = alertMapper.toResponse(alert);
-        eventPublisher.publishEvent(new AlertCreatedEvent(stationId, alertResponse));
-
-        return alertResponse;
+        return alert;
     }
 
-    private int checkThreshold(boolean active, Float value, Float min, Float max) {
-        if (!active) return 0;
-
-        if (min != null && value < min) return -1;
-
-        if (max != null && value > max) return 1;
-
-        return 0;
-    }
-
-    private int checkThreshold(boolean active, Float value, Float max) {
-        if (!active) return 0;
-
-        if (max != null && value > max) return 1;
-
-        return 0;
-    }
-
-    private String generateMessage(int temperature, int humidity, int rainfall, int windSpeed, int dust) {
+    private String generateMessage(ThresholdEvaluation evaluation) {
         List<String> messages = new ArrayList<>();
 
-        if (temperature == -1) messages.add("Temperature below minimum");
-        if (temperature == 1) messages.add("Temperature above maximum");
+        if (evaluation.temperature() == ThresholdStatus.BELOW_MIN) {
+            messages.add("Temperature below minimum");
+        } else if (evaluation.temperature() == ThresholdStatus.ABOVE_MAX) {
+            messages.add("Temperature above maximum");
+        }
 
-        if (humidity == -1) messages.add("Humidity below minimum");
-        if (humidity == 1) messages.add("Humidity above maximum");
+        if (evaluation.humidity() == ThresholdStatus.BELOW_MIN) {
+            messages.add("Humidity below minimum");
+        } else if (evaluation.humidity() == ThresholdStatus.ABOVE_MAX) {
+            messages.add("Humidity above maximum");
+        }
 
-        if (rainfall == 1) messages.add("Rainfall above maximum");
+        if (evaluation.windSpeed() == ThresholdStatus.ABOVE_MAX) {
+            messages.add("Wind speed above maximum");
+        }
 
-        if (windSpeed == 1) messages.add("Wind speed above maximum");
+        if (evaluation.rainfall() == ThresholdStatus.ABOVE_MAX) {
+            messages.add("Rainfall above maximum");
+        }
 
-        if (dust == 1) messages.add("Dust level above maximum");
+        if (evaluation.dust() == ThresholdStatus.ABOVE_MAX) {
+            messages.add("Dust above maximum");
+        }
 
         return String.join(", ", messages);
+
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AlertResponse getById(Long id) {
         return alertRepository.findById(id)
                 .map(alertMapper::toResponse)

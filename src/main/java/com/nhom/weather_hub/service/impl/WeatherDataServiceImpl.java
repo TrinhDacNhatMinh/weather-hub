@@ -2,13 +2,18 @@ package com.nhom.weather_hub.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nhom.weather_hub.domain.records.ThresholdEvaluation;
 import com.nhom.weather_hub.dto.request.WeatherDataRequest;
+import com.nhom.weather_hub.dto.response.AlertResponse;
 import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.WeatherDataResponse;
+import com.nhom.weather_hub.entity.Alert;
 import com.nhom.weather_hub.entity.Station;
 import com.nhom.weather_hub.entity.WeatherData;
+import com.nhom.weather_hub.event.AlertCreatedEvent;
 import com.nhom.weather_hub.event.WeatherDataCreatedEvent;
 import com.nhom.weather_hub.exception.ResourceNotFoundException;
+import com.nhom.weather_hub.mapper.AlertMapper;
 import com.nhom.weather_hub.mapper.WeatherDataMapper;
 import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.repository.WeatherDataRepository;
@@ -36,12 +41,13 @@ public class WeatherDataServiceImpl implements WeatherDataService {
     private final WeatherDataRepository weatherDataRepository;
     private final StationRepository stationRepository;
     private final WeatherDataMapper weatherDataMapper;
+    private final AlertMapper alertMapper;
     private final AlertService alertService;
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void handleIncomingMqttData(String payload) throws JsonProcessingException {
 
         WeatherDataRequest request = objectMapper.readValue(payload, WeatherDataRequest.class);
@@ -78,11 +84,12 @@ public class WeatherDataServiceImpl implements WeatherDataService {
         WeatherDataResponse weatherDataResponse = weatherDataMapper.toResponse(data);
         applicationEventPublisher.publishEvent(new WeatherDataCreatedEvent(station.getId(), weatherDataResponse));
 
-        // Check for alert
-        try {
-            alertService.checkAndCreateAlert(data);
-        } catch (Exception ex) {
-            log.error("Failed to check alert for station {}: {}", station.getId(), ex.getMessage());
+        //
+        Optional<ThresholdEvaluation> evaluation = alertService.evaluateThresholds(data);
+        if (evaluation.isPresent()) {
+            Alert alert = alertService.createAlert(data, evaluation.get());
+            AlertResponse alertResponse = alertMapper.toResponse(alert);
+            applicationEventPublisher.publishEvent(new AlertCreatedEvent(station.getId(), alertResponse));
         }
     }
 
