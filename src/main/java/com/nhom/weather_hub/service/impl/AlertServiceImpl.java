@@ -14,7 +14,6 @@ import com.nhom.weather_hub.repository.ThresholdRepository;
 import com.nhom.weather_hub.service.AlertService;
 import com.nhom.weather_hub.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,7 +33,6 @@ public class AlertServiceImpl implements AlertService {
     private final ThresholdRepository thresholdRepository;
     private final AlertMapper alertMapper;
     private final UserService userService;
-    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional(readOnly = true)
