@@ -3,7 +3,7 @@ package com.nhom.weather_hub.domain.policy;
 import com.nhom.weather_hub.domain.enums.AccessChannel;
 import com.nhom.weather_hub.entity.Role;
 import com.nhom.weather_hub.entity.User;
-import com.nhom.weather_hub.exception.LoginChannelNotAllowedException;
+import com.nhom.weather_hub.exception.business.LoginChannelNotAllowedException;
 
 public class LoginPolicy {
     public static void validate(User user, AccessChannel channel) {

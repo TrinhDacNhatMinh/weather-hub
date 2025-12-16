@@ -1,5 +1,7 @@
-package com.nhom.weather_hub.exception;
+package com.nhom.weather_hub.exception.handler;
 
+import com.nhom.weather_hub.exception.base.BusinessException;
+import com.nhom.weather_hub.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -46,38 +48,6 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    @ExceptionHandler(ThresholdAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleThresholdAlreadyExists(
-            ThresholdAlreadyExistsException exception,
-            HttpServletRequest request
-    ) {
-        log.warn("Threshold conflict: {}", exception.getMessage());
-
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(buildError(
-                        HttpStatus.CONFLICT,
-                        exception.getMessage(),
-                        request.getRequestURI()
-                ));
-    }
-
-    @ExceptionHandler(LoginChannelNotAllowedException.class)
-    public ResponseEntity<Map<String, Object>> handleLoginChannelNotAllowed(
-            LoginChannelNotAllowedException exception,
-            HttpServletRequest request
-    ) {
-        log.warn("Login channel not allowed: {}", exception.getMessage());
-
-        return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body(buildError(
-                        HttpStatus.FORBIDDEN,
-                        exception.getMessage(),
-                        request.getRequestURI()
-                ));
-    }
-
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<Map<String, Object>> handleBusinessException(
             BusinessException exception,
@@ -86,9 +56,9 @@ public class GlobalExceptionHandler {
         log.warn("Business error: {}", exception.getMessage());
 
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(exception.getHttpStatus())
                 .body(buildError(
-                        HttpStatus.BAD_REQUEST,
+                        exception.getHttpStatus(),
                         exception.getMessage(),
                         request.getRequestURI()
                 ));
