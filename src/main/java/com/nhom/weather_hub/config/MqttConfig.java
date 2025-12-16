@@ -79,12 +79,7 @@ public class MqttConfig {
         return message -> {
             String payload = message.getPayload().toString();
             System.out.println(payload);
-            try {
-                weatherDataService.handleIncomingMqttData(payload);
-            } catch (JsonProcessingException e) {
-                System.err.println("Failed to handle MQTT message: " + payload);
-                e.printStackTrace();
-            }
+            weatherDataService.handleIncomingMqttData(payload);
         };
     }
 }

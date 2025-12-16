@@ -9,7 +9,7 @@ import java.time.Instant;
 
 public interface WeatherDataService {
 
-    public void handleIncomingMqttData(String payload) throws JsonProcessingException;
+    public void handleIncomingMqttData(String payload);
 
     public WeatherDataResponse getWeatherDataById(Long id);
 

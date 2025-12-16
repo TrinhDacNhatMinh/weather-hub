@@ -26,7 +26,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -48,9 +47,15 @@ public class WeatherDataServiceImpl implements WeatherDataService {
 
     @Override
     @Transactional
-    public void handleIncomingMqttData(String payload) throws JsonProcessingException {
+    public void handleIncomingMqttData(String payload) {
+        WeatherDataRequest request;
 
-        WeatherDataRequest request = objectMapper.readValue(payload, WeatherDataRequest.class);
+        try {
+            request = objectMapper.readValue(payload, WeatherDataRequest.class);
+        } catch (JsonProcessingException exception) {
+            log.warn("Invalid MQTT payload JSON: {}", payload);
+            return;
+        }
 
         Instant recordTime = request.getRecordAt();
         Instant now = Instant.now();
