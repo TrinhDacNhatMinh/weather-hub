@@ -5,7 +5,7 @@ import com.nhom.weather_hub.dto.response.ThresholdResponse;
 import com.nhom.weather_hub.entity.Station;
 import com.nhom.weather_hub.entity.Threshold;
 import com.nhom.weather_hub.exception.ResourceNotFoundException;
-import com.nhom.weather_hub.exception.ThresholdAlreadyExistsException;
+import com.nhom.weather_hub.exception.business.ThresholdAlreadyExistsException;
 import com.nhom.weather_hub.mapper.ThresholdMapper;
 import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.repository.ThresholdRepository;

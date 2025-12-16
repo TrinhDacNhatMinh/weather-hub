@@ -6,6 +6,9 @@ import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.StationResponse;
 import com.nhom.weather_hub.entity.Station;
 import com.nhom.weather_hub.entity.User;
+import com.nhom.weather_hub.exception.ResourceNotFoundException;
+import com.nhom.weather_hub.exception.business.StationAlreadyAssignedException;
+import com.nhom.weather_hub.exception.business.PermissionDeniedException;
 import com.nhom.weather_hub.mapper.StationMapper;
 import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.service.StationService;
@@ -33,6 +36,7 @@ public class StationServiceImpl implements StationService {
     private final StationMapper stationMapper;
     private final ThresholdService thresholdService;
     private final UserService userService;
+    private static final String CHAR_POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     @Override
     @Transactional
@@ -45,6 +49,21 @@ public class StationServiceImpl implements StationService {
         stationRepository.save(station);
         thresholdService.createDefaultThreshold(station.getId());
         return station.getApiKey();
+    }
+
+    private String generateApiKey() {
+        SecureRandom random = new SecureRandom();
+        String apiKey;
+        do {
+            apiKey = random.ints(16, 0, CHAR_POOL.length())
+                    .mapToObj(CHAR_POOL::charAt)
+                    .collect(StringBuilder::new,
+                            StringBuilder::append,
+                            StringBuilder::append)
+                    .toString()
+                    .replaceAll("(.{4})(?!$)", "$1-");
+        } while (stationRepository.existsByApiKey(apiKey));
+        return apiKey;
     }
 
     @Override
@@ -61,9 +80,9 @@ public class StationServiceImpl implements StationService {
     @Transactional
     public StationResponse addStation(AddStationRequest request) {
         Station station = stationRepository.findByApiKey(request.getApiKey())
-                .orElseThrow(() -> new RuntimeException("Station not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Station not found with api key " + request.getApiKey()));
         if (station.getUser() != null) {
-            throw new RuntimeException("Station already assigned to another user");
+            throw new StationAlreadyAssignedException();
         }
 
         station.setUser(userService.getCurrentUser());
@@ -156,7 +175,7 @@ public class StationServiceImpl implements StationService {
     @Transactional(readOnly = true)
     public StationResponse getStationById(Long id) {
         Station station = stationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Station not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Station not found with id " + id));
         return stationMapper.toResponse(station);
     }
 
@@ -164,7 +183,7 @@ public class StationServiceImpl implements StationService {
     @Transactional(readOnly = true)
     public StationResponse getStationByApiKey(String apiKey) {
         Station station = stationRepository.findByApiKey(apiKey)
-                .orElseThrow(() -> new RuntimeException("Station not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Station not found with api key " + apiKey));
         return stationMapper.toResponse(station);
     }
 
@@ -172,10 +191,8 @@ public class StationServiceImpl implements StationService {
     @Transactional
     public StationResponse updateStation(Long id, UpdateStationRequest request) {
         Station existing = stationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Station not found"));
-        if (!(Objects.equals(existing.getUser().getId(), userService.getCurrentUser().getId()))) {
-            throw new RuntimeException("You do not have permission to detach this station");
-        }
+                .orElseThrow(() -> new ResourceNotFoundException("Station not found with id " + id));
+        checkOwnership(existing);
         stationMapper.updateEntity(request, existing);
         Station updated = stationRepository.save(existing);
         return stationMapper.toResponse(updated);
@@ -185,10 +202,8 @@ public class StationServiceImpl implements StationService {
     @Transactional
     public StationResponse updateStationSharing(Long id) {
         Station station = stationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Station not found"));
-        if (!(Objects.equals(station.getUser().getId(), userService.getCurrentUser().getId()))) {
-            throw new RuntimeException("You do not have permission to detach this station");
-        }
+                .orElseThrow(() -> new ResourceNotFoundException("Station not found with id " + id));
+        checkOwnership(station);
         station.setIsPublic(!station.getIsPublic());
         Station updated = stationRepository.save(station);
         return stationMapper.toResponse(updated);
@@ -198,38 +213,31 @@ public class StationServiceImpl implements StationService {
     @Transactional
     public StationResponse detachStation(Long id) {
         Station station = stationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Station not found"));
-        if (!(Objects.equals(station.getUser().getId(), userService.getCurrentUser().getId()))) {
-            throw new RuntimeException("You do not have permission to detach this station");
-        }
+                .orElseThrow(() -> new ResourceNotFoundException("Station not found with id " + id));
+        checkOwnership(station);
+
         station.setUser(null);
+        station.setActive(false);
+        station.setIsPublic(false);
+
         Station updated = stationRepository.save(station);
         return stationMapper.toResponse(updated);
+    }
+
+    private void checkOwnership(Station station) {
+        Long currentUserId = userService.getCurrentUser().getId();
+        if (station.getUser() == null || !Objects.equals(station.getUser().getId(), currentUserId)) {
+            throw new PermissionDeniedException();
+        }
     }
 
     @Override
     @Transactional
     public void deleteStation(Long id) {
         if (!stationRepository.existsById(id)) {
-            throw new RuntimeException("Station not found");
+            throw new ResourceNotFoundException("Station not found with id " + id);
         }
         stationRepository.deleteById(id);
-    }
-
-    private String generateApiKey() {
-        String CHAR_POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        SecureRandom random = new SecureRandom();
-        String apiKey;
-        do {
-            apiKey = random.ints(16, 0, CHAR_POOL.length())
-                    .mapToObj(CHAR_POOL::charAt)
-                    .collect(StringBuilder::new,
-                            StringBuilder::append,
-                            StringBuilder::append)
-                    .toString()
-                    .replaceAll("(.{4})(?!$)", "$1-");
-        } while (stationRepository.existsByApiKey(apiKey));
-        return apiKey;
     }
 
 }
