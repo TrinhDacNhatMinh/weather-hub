@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,8 +59,8 @@ public class WeatherDataServiceImpl implements WeatherDataService {
         }
 
         Instant recordTime = request.getRecordAt();
-        Instant now = Instant.now();
-
+        Instant now = Instant.now().plus(7, ChronoUnit.HOURS);
+        log.warn(now.toString());
         // Discard data older than 30 seconds or more than 5 seconds in the future
         if (recordTime.isBefore(now.minusSeconds(30)) || recordTime.isAfter(now.plusSeconds(5))) {
             log.warn("Ignored invalid MQTT timestamp: {}", payload);
