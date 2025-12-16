@@ -1,8 +1,8 @@
 package com.nhom.weather_hub.config;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nhom.weather_hub.service.WeatherDataService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +16,9 @@ import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannel
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 
+import java.lang.management.ManagementFactory;
+
+@Slf4j
 @Configuration
 @EnableIntegration
 @RequiredArgsConstructor
@@ -66,8 +69,12 @@ public class MqttConfig {
     // Adapter
     @Bean
     public MqttPahoMessageDrivenChannelAdapter inbound(MqttPahoClientFactory factory, MessageChannel mqttInputChannel) {
+        String instanceId = ManagementFactory.getRuntimeMXBean().getName();
         MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter(clientId + "-sub", factory, topic);
+                new MqttPahoMessageDrivenChannelAdapter(
+                        clientId + "-sub" +instanceId,
+                        factory,
+                        topic);
         adapter.setOutputChannel(mqttInputChannel);
         return adapter;
     }
@@ -78,7 +85,7 @@ public class MqttConfig {
     public MessageHandler handler() {
         return message -> {
             String payload = message.getPayload().toString();
-            System.out.println(payload);
+            log.debug(payload);
             weatherDataService.handleIncomingMqttData(payload);
         };
     }
