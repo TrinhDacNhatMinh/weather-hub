@@ -1,6 +1,5 @@
 package com.nhom.weather_hub.service.impl;
 
-import com.nhom.weather_hub.domain.enums.AccessChannel;
 import com.nhom.weather_hub.domain.policy.LoginPolicy;
 import com.nhom.weather_hub.dto.request.LoginRequest;
 import com.nhom.weather_hub.dto.request.RefreshTokenRequest;
@@ -13,6 +12,8 @@ import com.nhom.weather_hub.entity.RefreshToken;
 import com.nhom.weather_hub.entity.Role;
 import com.nhom.weather_hub.entity.User;
 import com.nhom.weather_hub.entity.VerificationToken;
+import com.nhom.weather_hub.exception.business.EmailAlreadyExistsException;
+import com.nhom.weather_hub.exception.business.UsernameAlreadyExistsException;
 import com.nhom.weather_hub.repository.RefreshTokenRepository;
 import com.nhom.weather_hub.repository.RoleRepository;
 import com.nhom.weather_hub.repository.UserRepository;
@@ -20,7 +21,6 @@ import com.nhom.weather_hub.repository.VerificationTokenRepository;
 import com.nhom.weather_hub.security.JwtUtil;
 import com.nhom.weather_hub.service.AuthService;
 import com.nhom.weather_hub.service.MailService;
-import com.nhom.weather_hub.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -43,7 +43,10 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final MailService mailService;
-    private final UserService userService;
+    public static final Role DEFAULT_ROLE = Role.builder()
+            .id(1L)
+            .name(Role.RoleName.ROLE_USER)
+            .build();
 
     @Value("${jwt.refresh-expiration}")
     private long refreshExpiration;
@@ -126,22 +129,21 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exist");
+            throw new UsernameAlreadyExistsException(request.getUsername());
         }
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exist");
+            throw new EmailAlreadyExistsException(request.getEmail());
         }
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());
-        Role role = roleRepository.findByName(Role.RoleName.ROLE_USER)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+
         User user = User.builder()
                 .name(request.getName())
                 .username(request.getUsername())
                 .password(encodedPassword)
                 .email(request.getEmail())
                 .active(false)
-                .role(role)
+                .role(DEFAULT_ROLE)
                 .build();
         userRepository.save(user);
 
