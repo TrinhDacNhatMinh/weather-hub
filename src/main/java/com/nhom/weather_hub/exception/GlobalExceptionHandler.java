@@ -46,6 +46,54 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(ThresholdAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleThresholdAlreadyExists(
+            ThresholdAlreadyExistsException exception,
+            HttpServletRequest request
+    ) {
+        log.warn("Threshold conflict: {}", exception.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(buildError(
+                        HttpStatus.CONFLICT,
+                        exception.getMessage(),
+                        request.getRequestURI()
+                ));
+    }
+
+    @ExceptionHandler(LoginChannelNotAllowedException.class)
+    public ResponseEntity<Map<String, Object>> handleLoginChannelNotAllowed(
+            LoginChannelNotAllowedException exception,
+            HttpServletRequest request
+    ) {
+        log.warn("Login channel not allowed: {}", exception.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(buildError(
+                        HttpStatus.FORBIDDEN,
+                        exception.getMessage(),
+                        request.getRequestURI()
+                ));
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<Map<String, Object>> handleBusinessException(
+            BusinessException exception,
+            HttpServletRequest request
+    ) {
+        log.warn("Business error: {}", exception.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(buildError(
+                        HttpStatus.BAD_REQUEST,
+                        exception.getMessage(),
+                        request.getRequestURI()
+                ));
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleBadCredentials(
             BadCredentialsException ex, HttpServletRequest request) {

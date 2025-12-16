@@ -4,6 +4,8 @@ import com.nhom.weather_hub.dto.request.ThresholdRequest;
 import com.nhom.weather_hub.dto.response.ThresholdResponse;
 import com.nhom.weather_hub.entity.Station;
 import com.nhom.weather_hub.entity.Threshold;
+import com.nhom.weather_hub.exception.ResourceNotFoundException;
+import com.nhom.weather_hub.exception.ThresholdAlreadyExistsException;
 import com.nhom.weather_hub.mapper.ThresholdMapper;
 import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.repository.ThresholdRepository;
@@ -23,25 +25,28 @@ public class ThresholdServiceImpl implements ThresholdService {
     @Override
     @Transactional
     public void createDefaultThreshold(Long stationId) {
+        Station station = stationRepository.findById(stationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Station not found with id " + stationId));
         thresholdRepository.findByStationId(stationId).ifPresent(threshold -> {
-            throw new RuntimeException("Threshold already exists for this station");
+            throw new ThresholdAlreadyExistsException(stationId);
         });
 
-        Threshold threshold = new Threshold();
-        threshold.setTemperatureMin(10.0f);
-        threshold.setTemperatureMax(35.0f);
-        threshold.setHumidityMin(15.0f);
-        threshold.setHumidityMax(85.0f);
-        threshold.setRainfallMax(100.0f);
-        threshold.setWindSpeedMax(5.0f);
-        threshold.setDustMax(100.0f);
-        threshold.setTemperatureActive(false);
-        threshold.setHumidityActive(false);
-        threshold.setRainfallActive(false);
-        threshold.setWindSpeedActive(false);
-        threshold.setDustActive(false);
-        Station station = stationRepository.findById(stationId).orElseThrow(() -> new RuntimeException("Station not found"));
-        threshold.setStation(station);
+        Threshold threshold = Threshold.builder()
+                .temperatureMin(10f)
+                .temperatureMax(35f)
+                .humidityMin(15f)
+                .humidityMax(85f)
+                .rainfallMax(100f)
+                .windSpeedMax(5f)
+                .dustMax(100f)
+                .temperatureActive(false)
+                .humidityActive(false)
+                .rainfallActive(false)
+                .windSpeedActive(false)
+                .dustActive(false)
+                .station(station)
+                .build();
+
         thresholdRepository.save(threshold);
     }
 
@@ -49,7 +54,7 @@ public class ThresholdServiceImpl implements ThresholdService {
     @Transactional(readOnly = true)
     public ThresholdResponse getByStationId(Long stationId) {
         Threshold threshold = thresholdRepository.findByStationId(stationId)
-                .orElseThrow(() -> new RuntimeException("Threshold not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Threshold not found with station id " + stationId));
         return thresholdMapper.toResponse(threshold);
     }
 
@@ -57,7 +62,7 @@ public class ThresholdServiceImpl implements ThresholdService {
     @Transactional
     public ThresholdResponse updateThreshold(Long id, ThresholdRequest request) {
         Threshold existing = thresholdRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Threshold not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Threshold not found with id " + id));
         thresholdMapper.updateEntity(request, existing);
         Threshold updated = thresholdRepository.save(existing);
         return thresholdMapper.toResponse(updated);
