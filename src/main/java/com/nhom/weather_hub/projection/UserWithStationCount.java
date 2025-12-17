@@ -2,16 +2,16 @@ package com.nhom.weather_hub.projection;
 
 public interface UserWithStationCount {
 
-    public Long getId();
+    Long getId();
 
-    public String getName();
+    String getName();
 
-    public String getUsername();
+    String getUsername();
 
-    public String getEmail();
+    String getEmail();
 
-    public Boolean getActive();
+    Boolean getActive();
 
-    public Long getStationCount();
+    Long getStationCount();
 
 }
