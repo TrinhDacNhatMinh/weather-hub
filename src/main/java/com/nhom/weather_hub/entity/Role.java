@@ -1,5 +1,6 @@
 package com.nhom.weather_hub.entity;
 
+import com.nhom.weather_hub.domain.enums.RoleName;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,10 +21,5 @@ public class Role {
     @Enumerated(EnumType.STRING)
     @Column(name = "name", nullable = false, unique = true)
     private RoleName name;
-
-    public enum RoleName {
-        ROLE_ADMIN,
-        ROLE_USER
-    }
 
 }

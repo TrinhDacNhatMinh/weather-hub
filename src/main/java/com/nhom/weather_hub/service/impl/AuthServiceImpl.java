@@ -1,5 +1,6 @@
 package com.nhom.weather_hub.service.impl;
 
+import com.nhom.weather_hub.domain.enums.RoleName;
 import com.nhom.weather_hub.domain.policy.LoginPolicy;
 import com.nhom.weather_hub.dto.request.ChangePasswordRequest;
 import com.nhom.weather_hub.dto.request.LoginRequest;
@@ -48,7 +49,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserService userService;
     public static final Role DEFAULT_ROLE = Role.builder()
             .id(2L)
-            .name(Role.RoleName.ROLE_USER)
+            .name(RoleName.ROLE_USER)
             .build();
 
     @Value("${jwt.refresh-expiration}")

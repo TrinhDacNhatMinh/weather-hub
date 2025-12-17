@@ -1,5 +1,6 @@
 package com.nhom.weather_hub.config;
 
+import com.nhom.weather_hub.domain.enums.RoleName;
 import com.nhom.weather_hub.entity.Role;
 import com.nhom.weather_hub.entity.User;
 import com.nhom.weather_hub.repository.RoleRepository;
@@ -18,15 +19,15 @@ public class DataInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
 
         if (roleRepository.count() == 0) {
-            roleRepository.save(new Role(null, Role.RoleName.ROLE_ADMIN));
-            roleRepository.save(new Role(null, Role.RoleName.ROLE_USER));
+            roleRepository.save(new Role(null, RoleName.ROLE_ADMIN));
+            roleRepository.save(new Role(null, RoleName.ROLE_USER));
         }
 
         if (userRepository.count() == 0) {
-            Role adminRole = roleRepository.findByName(Role.RoleName.ROLE_ADMIN).orElseThrow();
+            Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN).orElseThrow();
             User admin = User.builder()
                     .name("Admin")
                     .username("admin")
