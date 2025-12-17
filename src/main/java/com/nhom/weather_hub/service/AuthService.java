@@ -1,5 +1,6 @@
 package com.nhom.weather_hub.service;
 
+import com.nhom.weather_hub.dto.request.ChangePasswordRequest;
 import com.nhom.weather_hub.dto.request.LoginRequest;
 import com.nhom.weather_hub.dto.request.RefreshTokenRequest;
 import com.nhom.weather_hub.dto.request.RegisterRequest;
@@ -19,5 +20,7 @@ public interface AuthService {
     RegisterResponse register(RegisterRequest request);
 
     VerifyResponse verifyEmail(String token);
+
+    void changePassword(ChangePasswordRequest request);
 
 }

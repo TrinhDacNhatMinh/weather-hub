@@ -1,5 +1,6 @@
 package com.nhom.weather_hub.controller;
 
+import com.nhom.weather_hub.dto.request.ChangePasswordRequest;
 import com.nhom.weather_hub.dto.request.LoginRequest;
 import com.nhom.weather_hub.dto.request.RefreshTokenRequest;
 import com.nhom.weather_hub.dto.request.RegisterRequest;
@@ -9,6 +10,8 @@ import com.nhom.weather_hub.dto.response.RegisterResponse;
 import com.nhom.weather_hub.dto.response.VerifyResponse;
 import com.nhom.weather_hub.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -56,6 +59,18 @@ public class AuthController {
     public ResponseEntity<VerifyResponse> verifyEmail(@RequestParam("token") @NotBlank String token) {
         VerifyResponse response = authService.verifyEmail(token);
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/password")
+    @Operation(summary = "Change current user's password")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Password changed successfully"),
+            @ApiResponse(responseCode = "403", description = "User is not active"),
+            @ApiResponse(responseCode = "422", description = "Invalid old password")
+    })
+    public ResponseEntity<Void> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
+        authService.changePassword(request);
+        return ResponseEntity.noContent().build();
     }
 
 }

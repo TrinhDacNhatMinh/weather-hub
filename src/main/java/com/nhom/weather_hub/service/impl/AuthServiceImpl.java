@@ -1,6 +1,7 @@
 package com.nhom.weather_hub.service.impl;
 
 import com.nhom.weather_hub.domain.policy.LoginPolicy;
+import com.nhom.weather_hub.dto.request.ChangePasswordRequest;
 import com.nhom.weather_hub.dto.request.LoginRequest;
 import com.nhom.weather_hub.dto.request.RefreshTokenRequest;
 import com.nhom.weather_hub.dto.request.RegisterRequest;
@@ -13,14 +14,16 @@ import com.nhom.weather_hub.entity.Role;
 import com.nhom.weather_hub.entity.User;
 import com.nhom.weather_hub.entity.VerificationToken;
 import com.nhom.weather_hub.exception.business.EmailAlreadyExistsException;
+import com.nhom.weather_hub.exception.business.InvalidPasswordException;
+import com.nhom.weather_hub.exception.business.UserNotActiveException;
 import com.nhom.weather_hub.exception.business.UsernameAlreadyExistsException;
 import com.nhom.weather_hub.repository.RefreshTokenRepository;
-import com.nhom.weather_hub.repository.RoleRepository;
 import com.nhom.weather_hub.repository.UserRepository;
 import com.nhom.weather_hub.repository.VerificationTokenRepository;
 import com.nhom.weather_hub.security.JwtUtil;
 import com.nhom.weather_hub.service.AuthService;
 import com.nhom.weather_hub.service.MailService;
+import com.nhom.weather_hub.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -39,12 +42,12 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final VerificationTokenRepository verificationTokenRepository;
-    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final MailService mailService;
+    private final UserService userService;
     public static final Role DEFAULT_ROLE = Role.builder()
-            .id(1L)
+            .id(2L)
             .name(Role.RoleName.ROLE_USER)
             .build();
 
@@ -184,5 +187,22 @@ public class AuthServiceImpl implements AuthService {
                 Instant.now(),
                 "Account verified successfully"
         );
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(ChangePasswordRequest request) {
+        User user = userService.getCurrentUser();
+
+        if (!user.getActive()) {
+            throw new UserNotActiveException();
+        }
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new InvalidPasswordException();
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 }
