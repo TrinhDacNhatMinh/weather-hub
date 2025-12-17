@@ -3,7 +3,7 @@ package com.nhom.weather_hub.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhom.weather_hub.domain.records.ThresholdEvaluation;
-import com.nhom.weather_hub.dto.request.WeatherDataRequest;
+import com.nhom.weather_hub.domain.records.WeatherDataRequest;
 import com.nhom.weather_hub.dto.response.AlertResponse;
 import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.WeatherDataResponse;
@@ -58,7 +58,7 @@ public class WeatherDataServiceImpl implements WeatherDataService {
             return;
         }
 
-        Instant recordTime = request.getRecordAt();
+        Instant recordTime = request.recordAt();
         Instant now = TimeUtils.nowVn();
 
         // Discard data older than 30 seconds or more than 5 seconds in the future
@@ -68,9 +68,9 @@ public class WeatherDataServiceImpl implements WeatherDataService {
         }
 
         // Validate API key
-        Optional<Station> stationOptional = stationRepository.findByApiKey(request.getApiKey());
+        Optional<Station> stationOptional = stationRepository.findByApiKey(request.apiKey());
         if (stationOptional.isEmpty()) {
-            log.warn("Invalid API key {}", request.getApiKey());
+            log.warn("Invalid API key {}", request.apiKey());
             return;
         }
         Station station = stationOptional.get();

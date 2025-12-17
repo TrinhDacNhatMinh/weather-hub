@@ -38,10 +38,10 @@ public class StationMapper {
             return;
         }
 
-        entity.setName(request.getName());
-        entity.setLocation(request.getLocation());
-        entity.setLatitude(request.getLatitude());
-        entity.setLongitude(request.getLongitude());
+        entity.setName(request.name());
+        entity.setLocation(request.location());
+        entity.setLatitude(request.latitude());
+        entity.setLongitude(request.longitude());
     }
 
 }

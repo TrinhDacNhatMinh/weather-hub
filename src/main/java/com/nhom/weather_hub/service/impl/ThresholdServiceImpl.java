@@ -1,6 +1,6 @@
 package com.nhom.weather_hub.service.impl;
 
-import com.nhom.weather_hub.dto.request.ThresholdRequest;
+import com.nhom.weather_hub.dto.request.UpdateThresholdRequest;
 import com.nhom.weather_hub.dto.response.ThresholdResponse;
 import com.nhom.weather_hub.entity.Station;
 import com.nhom.weather_hub.entity.Threshold;
@@ -60,7 +60,7 @@ public class ThresholdServiceImpl implements ThresholdService {
 
     @Override
     @Transactional
-    public ThresholdResponse updateThreshold(Long id, ThresholdRequest request) {
+    public ThresholdResponse updateThreshold(Long id, UpdateThresholdRequest request) {
         Threshold existing = thresholdRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Threshold not found with id " + id));
         thresholdMapper.updateEntity(request, existing);

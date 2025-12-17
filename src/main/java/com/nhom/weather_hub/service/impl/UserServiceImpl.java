@@ -130,7 +130,7 @@ public class UserServiceImpl implements UserService {
             throw new UserNotActiveException();
         }
 
-        user.setName(request.getName());
+        user.setName(request.name());
 
         userRepository.save(user);
         return userMapper.toResponse(user);

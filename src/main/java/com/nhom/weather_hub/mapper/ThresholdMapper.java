@@ -1,6 +1,6 @@
 package com.nhom.weather_hub.mapper;
 
-import com.nhom.weather_hub.dto.request.ThresholdRequest;
+import com.nhom.weather_hub.dto.request.UpdateThresholdRequest;
 import com.nhom.weather_hub.dto.response.ThresholdResponse;
 import com.nhom.weather_hub.entity.Threshold;
 import org.springframework.stereotype.Component;
@@ -34,23 +34,23 @@ public class ThresholdMapper {
         return thresholdResponse;
     }
 
-    public void updateEntity(ThresholdRequest request, Threshold entity) {
+    public void updateEntity(UpdateThresholdRequest request, Threshold entity) {
         if (request == null) {
             return;
         }
 
-        entity.setTemperatureMin(request.getTemperatureMin());
-        entity.setTemperatureMax(request.getTemperatureMax());
-        entity.setHumidityMin(request.getHumidityMin());
-        entity.setHumidityMax(request.getHumidityMax());
-        entity.setRainfallMax(request.getRainfallMax());
-        entity.setWindSpeedMax(request.getWindSpeedMax());
-        entity.setDustMax(request.getDustMax());
-        entity.setTemperatureActive(request.getTemperatureActive());
-        entity.setHumidityActive(request.getHumidityActive());
-        entity.setRainfallActive(request.getRainfallActive());
-        entity.setWindSpeedActive(request.getWindSpeedActive());
-        entity.setDustActive(request.getDustActive());
+        entity.setTemperatureMin(request.temperatureMin());
+        entity.setTemperatureMax(request.temperatureMax());
+        entity.setHumidityMin(request.humidityMin());
+        entity.setHumidityMax(request.humidityMax());
+        entity.setRainfallMax(request.rainfallMax());
+        entity.setWindSpeedMax(request.windSpeedMax());
+        entity.setDustMax(request.dustMax());
+        entity.setTemperatureActive(request.temperatureActive());
+        entity.setHumidityActive(request.humidityActive());
+        entity.setRainfallActive(request.rainfallActive());
+        entity.setWindSpeedActive(request.windSpeedActive());
+        entity.setDustActive(request.dustActive());
     }
 
 }

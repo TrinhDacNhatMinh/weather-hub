@@ -83,16 +83,16 @@ public class StationServiceImpl implements StationService {
     @Override
     @Transactional
     public StationResponse addStation(AddStationRequest request) {
-        Station station = stationRepository.findByApiKey(request.getApiKey())
-                .orElseThrow(() -> new ResourceNotFoundException("Station not found with api key " + request.getApiKey()));
+        Station station = stationRepository.findByApiKey(request.apiKey())
+                .orElseThrow(() -> new ResourceNotFoundException("Station not found with api key " + request.apiKey()));
         if (station.getUser() != null) {
             throw new StationAlreadyAssignedException();
         }
 
         station.setUser(userService.getCurrentUser());
-        station.setName(request.getName());
-        station.setLatitude(request.getLatitude());
-        station.setLongitude(request.getLongitude());
+        station.setName(request.name());
+        station.setLatitude(request.latitude());
+        station.setLongitude(request.longitude());
         station.setActive(true);
         Station updated = stationRepository.save(station);
         return stationMapper.toResponse(updated, getStatus(updated.getUpdatedAt()));

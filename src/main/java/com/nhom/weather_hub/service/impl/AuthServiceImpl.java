@@ -58,15 +58,15 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findByUsername(request.username())
                 .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new BadCredentialsException("Invalid username or password");
         }
         if (!user.getActive()) {
             throw new DisabledException("Account is not active");
         }
-        LoginPolicy.validate(user, request.getAccessChannel());
+        LoginPolicy.validate(user, request.accessChannel());
         refreshTokenRepository.deleteByUser(user);
 
         String accessToken = jwtUtil.generateAccessToken(user.getUsername());
@@ -99,18 +99,18 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponse refreshToken(RefreshTokenRequest request) {
-        RefreshToken tokenEntity = refreshTokenRepository.findByToken(request.getRefreshToken())
+        RefreshToken tokenEntity = refreshTokenRepository.findByToken(request.refreshToken())
                 .orElseThrow(() -> new BadCredentialsException("Refresh token not found"));
 
         if (tokenEntity.getExpiryDate().isBefore(Instant.now())) {
             refreshTokenRepository.delete(tokenEntity);
             throw new BadCredentialsException("Refresh token expired");
         }
-        if (!jwtUtil.validateToken(request.getRefreshToken())) {
+        if (!jwtUtil.validateToken(request.refreshToken())) {
             throw new BadCredentialsException("Invalid refresh token");
         }
 
-        String username = jwtUtil.getUsernameFromToken(request.getRefreshToken());
+        String username = jwtUtil.getUsernameFromToken(request.refreshToken());
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new BadCredentialsException("User not found"));
 
@@ -132,20 +132,20 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new UsernameAlreadyExistsException(request.getUsername());
+        if (userRepository.existsByUsername(request.username())) {
+            throw new UsernameAlreadyExistsException(request.username());
         }
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new EmailAlreadyExistsException(request.getEmail());
+        if (userRepository.existsByEmail(request.email())) {
+            throw new EmailAlreadyExistsException(request.email());
         }
 
-        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        String encodedPassword = passwordEncoder.encode(request.password());
 
         User user = User.builder()
-                .name(request.getName())
-                .username(request.getUsername())
+                .name(request.name())
+                .username(request.username())
                 .password(encodedPassword)
-                .email(request.getEmail())
+                .email(request.email())
                 .active(false)
                 .role(DEFAULT_ROLE)
                 .build();
@@ -199,11 +199,12 @@ public class AuthServiceImpl implements AuthService {
             throw new UserNotActiveException();
         }
 
-        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.oldPassword(), user.getPassword())) {
             throw new InvalidPasswordException();
         }
 
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
     }
+
 }

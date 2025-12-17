@@ -5,7 +5,6 @@ import com.nhom.weather_hub.dto.request.AddStationRequest;
 import com.nhom.weather_hub.dto.request.UpdateStationRequest;
 import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.StationResponse;
-import com.nhom.weather_hub.entity.User;
 
 import java.time.Instant;
 import java.util.List;
