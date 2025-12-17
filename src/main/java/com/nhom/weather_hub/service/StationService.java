@@ -1,11 +1,13 @@
 package com.nhom.weather_hub.service;
 
+import com.nhom.weather_hub.domain.enums.StationStatus;
 import com.nhom.weather_hub.dto.request.AddStationRequest;
 import com.nhom.weather_hub.dto.request.UpdateStationRequest;
 import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.StationResponse;
 import com.nhom.weather_hub.entity.User;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface StationService {
@@ -27,6 +29,8 @@ public interface StationService {
     public StationResponse getStationById(Long id);
 
     public StationResponse getStationByApiKey(String apiKey);
+
+    public StationStatus getStatus(Instant updatedAt);
 
     public StationResponse updateStation(Long id, UpdateStationRequest request);
 

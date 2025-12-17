@@ -19,6 +19,7 @@ import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.repository.WeatherDataRepository;
 import com.nhom.weather_hub.service.AlertService;
 import com.nhom.weather_hub.service.WeatherDataService;
+import com.nhom.weather_hub.util.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -59,8 +60,8 @@ public class WeatherDataServiceImpl implements WeatherDataService {
         }
 
         Instant recordTime = request.getRecordAt();
-        Instant now = Instant.now().plus(7, ChronoUnit.HOURS);
-        log.warn(now.toString());
+        Instant now = TimeUtils.nowVn();
+
         // Discard data older than 30 seconds or more than 5 seconds in the future
         if (recordTime.isBefore(now.minusSeconds(30)) || recordTime.isAfter(now.plusSeconds(5))) {
             log.warn("Ignored invalid MQTT timestamp: {}", payload);

@@ -1,5 +1,6 @@
 package com.nhom.weather_hub.dto.response;
 
+import com.nhom.weather_hub.domain.enums.StationStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -31,8 +32,7 @@ public class StationResponse {
     @Schema(description = "Timestamp when the station was created.", example = "2025-11-19T09:23:19Z")
     private Instant createdAt;
 
-    @Schema(description = "Timestamp when the station was last updated.", example = "2025-11-19T10:00:00Z")
-    private Instant updatedAt;
+    private StationStatus status;
 
     @Schema(description = "Whether the station is currently active.", example = "true")
     private Boolean active;

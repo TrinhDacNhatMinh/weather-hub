@@ -1,5 +1,6 @@
 package com.nhom.weather_hub.service.impl;
 
+import com.nhom.weather_hub.domain.enums.StationStatus;
 import com.nhom.weather_hub.dto.request.AddStationRequest;
 import com.nhom.weather_hub.dto.request.UpdateStationRequest;
 import com.nhom.weather_hub.dto.response.PageResponse;
@@ -14,6 +15,7 @@ import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.service.StationService;
 import com.nhom.weather_hub.service.ThresholdService;
 import com.nhom.weather_hub.service.UserService;
+import com.nhom.weather_hub.util.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,11 +35,12 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class StationServiceImpl implements StationService {
 
+    private static final String CHAR_POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final long ONLINE_THRESHOLD_SECONDS = 60;
     private final StationRepository stationRepository;
     private final StationMapper stationMapper;
     private final ThresholdService thresholdService;
     private final UserService userService;
-    private static final String CHAR_POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     @Override
     @Transactional
@@ -91,7 +95,7 @@ public class StationServiceImpl implements StationService {
         station.setLongitude(request.getLongitude());
         station.setActive(true);
         Station updated = stationRepository.save(station);
-        return stationMapper.toResponse(updated);
+        return stationMapper.toResponse(updated, getStatus(updated.getUpdatedAt()));
     }
 
     @Override
@@ -102,7 +106,7 @@ public class StationServiceImpl implements StationService {
         Page<Station> stationPage = stationRepository.findByUserId(currentUser.getId(), pageable);
         List<StationResponse> content = stationPage.getContent()
                 .stream()
-                .map(stationMapper::toResponse)
+                .map(station -> stationMapper.toResponse(station, getStatus(station.getUpdatedAt())))
                 .toList();
         return new PageResponse<>(
                 content,
@@ -121,7 +125,7 @@ public class StationServiceImpl implements StationService {
         Page<Station> stationPage = stationRepository.findByUserId(userId, pageable);
         List<StationResponse> content = stationPage.getContent()
                 .stream()
-                .map(stationMapper::toResponse)
+                .map(station -> stationMapper.toResponse(station, getStatus(station.getUpdatedAt())))
                 .toList();
         return new PageResponse<>(
                 content,
@@ -140,7 +144,7 @@ public class StationServiceImpl implements StationService {
         Page<Station> stationPage = stationRepository.findByIsPublicTrue(pageable);
         List<StationResponse> content = stationPage.getContent()
                 .stream()
-                .map(stationMapper::toResponse)
+                .map(station -> stationMapper.toResponse(station, getStatus(station.getUpdatedAt())))
                 .toList();
         return new PageResponse<>(
                 content,
@@ -159,7 +163,7 @@ public class StationServiceImpl implements StationService {
         Page<Station> stationPage = stationRepository.findAll(pageable);
         List<StationResponse> content = stationPage.getContent()
                 .stream()
-                .map(stationMapper::toResponse)
+                .map(station -> stationMapper.toResponse(station, getStatus(station.getUpdatedAt())))
                 .toList();
         return new PageResponse<>(
                 content,
@@ -176,7 +180,7 @@ public class StationServiceImpl implements StationService {
     public StationResponse getStationById(Long id) {
         Station station = stationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Station not found with id " + id));
-        return stationMapper.toResponse(station);
+        return stationMapper.toResponse(station, getStatus(station.getUpdatedAt()));
     }
 
     @Override
@@ -184,7 +188,23 @@ public class StationServiceImpl implements StationService {
     public StationResponse getStationByApiKey(String apiKey) {
         Station station = stationRepository.findByApiKey(apiKey)
                 .orElseThrow(() -> new ResourceNotFoundException("Station not found with api key " + apiKey));
-        return stationMapper.toResponse(station);
+        return stationMapper.toResponse(station, getStatus(station.getUpdatedAt()));
+    }
+
+    @Override
+    public StationStatus getStatus(Instant updatedAt) {
+        if (updatedAt == null) {
+            return StationStatus.OFFLINE;
+        }
+
+        Instant now = TimeUtils.nowVn();
+        long diffSeconds = Duration.between(updatedAt, now).getSeconds();
+
+        if (diffSeconds <= ONLINE_THRESHOLD_SECONDS) {
+            return StationStatus.ONLINE;
+        }
+
+        return StationStatus.OFFLINE;
     }
 
     @Override
@@ -195,7 +215,7 @@ public class StationServiceImpl implements StationService {
         checkOwnership(existing);
         stationMapper.updateEntity(request, existing);
         Station updated = stationRepository.save(existing);
-        return stationMapper.toResponse(updated);
+        return stationMapper.toResponse(updated, getStatus(updated.getUpdatedAt()));
     }
 
     @Override
@@ -206,7 +226,7 @@ public class StationServiceImpl implements StationService {
         checkOwnership(station);
         station.setIsPublic(!station.getIsPublic());
         Station updated = stationRepository.save(station);
-        return stationMapper.toResponse(updated);
+        return stationMapper.toResponse(updated, getStatus(updated.getUpdatedAt()));
     }
 
     @Override
@@ -221,7 +241,7 @@ public class StationServiceImpl implements StationService {
         station.setIsPublic(false);
 
         Station updated = stationRepository.save(station);
-        return stationMapper.toResponse(updated);
+        return stationMapper.toResponse(updated, getStatus(updated.getUpdatedAt()));
     }
 
     private void checkOwnership(Station station) {

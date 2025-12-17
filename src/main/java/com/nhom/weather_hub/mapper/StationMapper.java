@@ -1,5 +1,6 @@
 package com.nhom.weather_hub.mapper;
 
+import com.nhom.weather_hub.domain.enums.StationStatus;
 import com.nhom.weather_hub.dto.request.UpdateStationRequest;
 import com.nhom.weather_hub.dto.response.StationResponse;
 import com.nhom.weather_hub.entity.Station;
@@ -8,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class StationMapper {
 
-    public StationResponse toResponse(Station entity) {
+    public StationResponse toResponse(Station entity, StationStatus status) {
         if (entity == null) {
             return null;
         }
@@ -21,7 +22,7 @@ public class StationMapper {
         stationResponse.setLongitude(entity.getLongitude());
         stationResponse.setApiKey(entity.getApiKey());
         stationResponse.setCreatedAt(entity.getCreatedAt());
-        stationResponse.setUpdatedAt(entity.getUpdatedAt());
+        stationResponse.setStatus(status);
         stationResponse.setActive(entity.getActive());
         stationResponse.setIsPublic(entity.getIsPublic());
         if (entity.getUser() != null) {
