@@ -1,36 +1,51 @@
 package com.nhom.weather_hub.dto.response;
 
-import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@Data
-public class ThresholdResponse {
+@Schema(description = "Response object representing threshold configuration of a weather station")
+public record ThresholdResponse(
 
-    private Long id;
+        @Schema(description = "Threshold ID", example = "48")
+        Long id,
 
-    private Float temperatureMin;
+        @Schema(description = "Minimum temperature threshold (°C)", example = "10.0")
+        Float temperatureMin,
 
-    private Float temperatureMax;
+        @Schema(description = "Maximum temperature threshold (°C)", example = "35.0")
+        Float temperatureMax,
 
-    private Float humidityMin;
+        @Schema(description = "Minimum humidity threshold (%)", example = "20.0")
+        Float humidityMin,
 
-    private Float humidityMax;
+        @Schema(description = "Maximum humidity threshold (%)", example = "80.0")
+        Float humidityMax,
 
-    private Float rainfallMax;
+        @Schema(description = "Maximum rainfall threshold (mm)", example = "50.0")
+        Float rainfallMax,
 
-    private Float windSpeedMax;
+        @Schema(description = "Maximum wind speed threshold (m/s)", example = "5.0")
+        Float windSpeedMax,
 
-    private Float dustMax;
+        @Schema(description = "Maximum dust concentration threshold (µg/m³)", example = "100.0")
+        Float dustMax,
 
-    private Boolean temperatureActive;
+        @Schema(description = "Whether temperature threshold alert is active", example = "true")
+        Boolean temperatureActive,
 
-    private Boolean humidityActive;
+        @Schema(description = "Whether humidity threshold alert is active", example = "true")
+        Boolean humidityActive,
 
-    private Boolean rainfallActive;
+        @Schema(description = "Whether rainfall threshold alert is active", example = "false")
+        Boolean rainfallActive,
 
-    private Boolean windSpeedActive;
+        @Schema(description = "Whether wind speed threshold alert is active", example = "true")
+        Boolean windSpeedActive,
 
-    private Boolean dustActive;
+        @Schema(description = "Whether dust threshold alert is active", example = "true")
+        Boolean dustActive,
 
-    private Long stationId;
+        @Schema(description = "ID of the station this threshold belongs to", example = "12")
+        Long stationId
 
+) {
 }

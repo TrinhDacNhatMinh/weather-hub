@@ -1,24 +1,32 @@
 package com.nhom.weather_hub.dto.response;
 
-import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;
 
-@Data
-public class AlertResponse {
+@Schema(description = "Response object for weather alerts")
+public record AlertResponse(
 
-    private Long id;
+        @Schema(description = "Alert ID", example = "17")
+        Long id,
 
-    private String message;
+        @Schema(description = "Alert message", example = "Dust above maximum")
+        String message,
 
-    private String status;
+        @Schema(description = "Alert status", example = "SEEN")
+        String status,
 
-    private Instant createdAt;
+        @Schema(description = "Time alert was created", example = "2025-12-17T08:00:00Z")
+        Instant createdAt,
 
-    private Long weatherDataId;
+        @Schema(description = "Associated weather data ID", example = "1025")
+        Long weatherDataId,
 
-    private Long stationId;
+        @Schema(description = "Station ID", example = "12")
+        Long stationId,
 
-    private String stationName;
+        @Schema(description = "Station name", example = "Station A")
+        String stationName
 
+) {
 }

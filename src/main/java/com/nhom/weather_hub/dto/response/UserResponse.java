@@ -1,20 +1,27 @@
 package com.nhom.weather_hub.dto.response;
 
-import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@Data
-public class UserResponse {
+@Schema(description = "Response object representing a user")
+public record UserResponse(
 
-    private Long id;
+        @Schema(description = "User ID", example = "7")
+        Long id,
 
-    private String name;
+        @Schema(description = "Full name of the user", example = "Nguyen Van A")
+        String name,
 
-    private String username;
+        @Schema(description = "Username used for login", example = "user123")
+        String username,
 
-    private String email;
+        @Schema(description = "Email address of the user", example = "ex@gmail.com")
+        String email,
 
-    private Boolean active;
+        @Schema(description = "Whether the user account is active", example = "true")
+        Boolean active,
 
-    private Long stationCount;
+        @Schema(description = "Number of stations owned by the user", example = "3")
+        Long stationCount
 
+) {
 }
