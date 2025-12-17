@@ -30,7 +30,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -87,11 +86,15 @@ public class WeatherDataServiceImpl implements WeatherDataService {
         data.setStation(station);
         weatherDataRepository.save(data);
 
+        // Update station updatedAt
+        station.setUpdatedAt(TimeUtils.nowVn());
+        stationRepository.save(station);
+
         // Push real-time updates via WebSocket
         WeatherDataResponse weatherDataResponse = weatherDataMapper.toResponse(data);
         applicationEventPublisher.publishEvent(new WeatherDataCreatedEvent(station.getId(), weatherDataResponse));
 
-        //
+        // Alert
         Optional<ThresholdEvaluation> evaluation = alertService.evaluateThresholds(data);
         if (evaluation.isPresent()) {
             Alert alert = alertService.createAlert(data, evaluation.get());
