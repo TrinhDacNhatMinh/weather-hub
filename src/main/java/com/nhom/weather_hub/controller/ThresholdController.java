@@ -1,6 +1,6 @@
 package com.nhom.weather_hub.controller;
 
-import com.nhom.weather_hub.dto.request.ThresholdRequest;
+import com.nhom.weather_hub.dto.request.UpdateThresholdRequest;
 import com.nhom.weather_hub.dto.response.ThresholdResponse;
 import com.nhom.weather_hub.service.ThresholdService;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class ThresholdController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ThresholdResponse> updateThreshold(@PathVariable Long id, @RequestBody ThresholdRequest request) {
+    public ResponseEntity<ThresholdResponse> updateThreshold(@PathVariable Long id, @RequestBody UpdateThresholdRequest request) {
         ThresholdResponse response = thresholdService.updateThreshold(id, request);
         return ResponseEntity.ok(response);
     }

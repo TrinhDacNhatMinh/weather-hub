@@ -4,7 +4,6 @@ import com.nhom.weather_hub.dto.request.AddStationRequest;
 import com.nhom.weather_hub.dto.request.UpdateStationRequest;
 import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.StationResponse;
-import com.nhom.weather_hub.entity.User;
 import com.nhom.weather_hub.service.StationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
