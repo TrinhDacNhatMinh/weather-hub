@@ -20,7 +20,7 @@ public class WeatherDataListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleWeatherDataCreated(WeatherDataCreatedEvent event) {
         try {
-            webSocketService.sendWeatherData(event.getStationId(), event.getWeatherDataResponse());
+            webSocketService.sendWeatherData(event.stationId(), event.weatherDataResponse());
         } catch (Exception e) {
             log.error("Failed to send weather data via WebSocket", e);
         }

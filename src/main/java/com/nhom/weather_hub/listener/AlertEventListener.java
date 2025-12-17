@@ -20,7 +20,7 @@ public class AlertEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleAlertCreated(AlertCreatedEvent event) {
         try {
-            webSocketService.sendAlert(event.getStationId(), event.getAlertResponse());
+            webSocketService.sendAlert(event.stationId(), event.alertResponse());
         } catch (Exception e) {
             log.error("Failed to send alert via WebSocket", e);
         }
