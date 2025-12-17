@@ -1,5 +1,6 @@
 package com.nhom.weather_hub.service;
 
+import com.nhom.weather_hub.dto.request.UpdateUserRequest;
 import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.UserResponse;
 import com.nhom.weather_hub.entity.User;
@@ -14,5 +15,7 @@ public interface UserService extends UserDetailsService {
     UserResponse lockUser(Long id);
 
     UserResponse unlockUser(Long id);
+
+    UserResponse updateUserInfo(Long id, UpdateUserRequest request);
 
 }
