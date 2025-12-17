@@ -4,21 +4,21 @@ import com.nhom.weather_hub.domain.enums.AccessChannel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
 
-@Data
-@Schema(description = "Login request payload containing user credentials.")
-public class LoginRequest {
+@Schema(description = "Login request")
+public record LoginRequest (
 
-    @NotBlank
-    @Schema(description = "The username of the account.", example = "user123")
-    private String username;
+        @NotBlank(message = "Username cannot be blank")
+        @Schema(description = "The username of the account", example = "user123")
+        String username,
 
-    @NotBlank
-    @Schema(description = "The password of the account.", example = "abc456")
-    private String password;
+        @NotBlank(message = "Password cannot be blank")
+        @Schema(description = "The password of the account", example = "qwe123")
+        String password,
 
-    @NotNull
-    private AccessChannel accessChannel;
+        @NotNull(message = "Access channel must be provided")
+        @Schema(description = "Access channel of the login request", example = "MOBILE")
+        AccessChannel accessChannel
 
+) {
 }
