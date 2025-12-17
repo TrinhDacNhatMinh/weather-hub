@@ -11,12 +11,12 @@ import java.util.Optional;
 @Repository
 public interface StationRepository extends JpaRepository<Station, Long> {
 
-    public Optional<Station> findByApiKey(String apiKey);
+    Optional<Station> findByApiKey(String apiKey);
 
-    public Page<Station> findByUserId(Long userId, Pageable pageable);
+    Page<Station> findByUserId(Long userId, Pageable pageable);
 
-    public Page<Station> findByIsPublicTrue(Pageable pageable);
+    Page<Station> findByIsPublicTrue(Pageable pageable);
 
-    public boolean existsByApiKey(String apiKey);
+    boolean existsByApiKey(String apiKey);
 
 }

@@ -12,32 +12,32 @@ import java.util.List;
 
 public interface StationService {
 
-    public String createStation();
+    String createStation();
 
-    public List<String> createStations(int n);
+    List<String> createStations(int n);
 
-    public StationResponse addStation(AddStationRequest request);
+    StationResponse addStation(AddStationRequest request);
 
-    public PageResponse<StationResponse> getMyStations(int page, int size);
+    PageResponse<StationResponse> getMyStations(int page, int size);
 
-    public PageResponse<StationResponse> getStationsByUserId(Long userId, int page, int size);
+    PageResponse<StationResponse> getStationsByUserId(Long userId, int page, int size);
 
-    public PageResponse<StationResponse> getPublicStations(int page, int size);
+    PageResponse<StationResponse> getPublicStations(int page, int size);
 
-    public PageResponse<StationResponse> getAllStations(int page, int size);
+    PageResponse<StationResponse> getAllStations(int page, int size);
 
-    public StationResponse getStationById(Long id);
+    StationResponse getStationById(Long id);
 
-    public StationResponse getStationByApiKey(String apiKey);
+    StationResponse getStationByApiKey(String apiKey);
 
-    public StationStatus getStatus(Instant updatedAt);
+    StationStatus getStatus(Instant updatedAt);
 
-    public StationResponse updateStation(Long id, UpdateStationRequest request);
+    StationResponse updateStation(Long id, UpdateStationRequest request);
 
-    public StationResponse updateStationSharing(Long id);
+    StationResponse updateStationSharing(Long id);
 
-    public StationResponse detachStation(Long id);
+    StationResponse detachStation(Long id);
 
-    public void deleteStation(Long id);
+    void deleteStation(Long id);
 
 }

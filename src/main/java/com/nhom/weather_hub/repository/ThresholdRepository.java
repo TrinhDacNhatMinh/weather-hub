@@ -9,6 +9,6 @@ import java.util.Optional;
 @Repository
 public interface ThresholdRepository extends JpaRepository<Threshold, Long> {
 
-    public Optional<Threshold> findByStationId(Long stationId);
+    Optional<Threshold> findByStationId(Long stationId);
 
 }

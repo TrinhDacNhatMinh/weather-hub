@@ -10,18 +10,18 @@ import java.util.Optional;
 
 public interface AlertService {
 
-    public Optional<ThresholdEvaluation> evaluateThresholds(WeatherData data);
+    Optional<ThresholdEvaluation> evaluateThresholds(WeatherData data);
 
-    public Alert createAlert(WeatherData data, ThresholdEvaluation thresholdEvaluation);
+    Alert createAlert(WeatherData data, ThresholdEvaluation thresholdEvaluation);
 
-    public AlertResponse getById(Long id);
+    AlertResponse getById(Long id);
 
-    public PageResponse<AlertResponse> getByUser(int page, int size);
+    PageResponse<AlertResponse> getByUser(int page, int size);
 
-    public AlertResponse updateStatus(Long id, Alert.Status status);
+    AlertResponse updateStatus(Long id, Alert.Status status);
 
-    public void deleteAlert(Long id);
+    void deleteAlert(Long id);
 
-    public void deleteAllByUser(Long userId);
+    void deleteAllByUser(Long userId);
 
 }

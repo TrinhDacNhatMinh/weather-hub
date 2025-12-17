@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AlertRepository extends JpaRepository<Alert, Long> {
 
-    public Page<Alert> findByWeatherData_Station_User_Id(Long userId, Pageable pageable);
+    Page<Alert> findByWeatherData_Station_User_Id(Long userId, Pageable pageable);
 
-    public void deleteAllByWeatherData_Station_User_Id(Long userId);
+    void deleteAllByWeatherData_Station_User_Id(Long userId);
 
 }

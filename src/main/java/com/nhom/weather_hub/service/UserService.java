@@ -7,12 +7,12 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 
 public interface UserService extends UserDetailsService {
 
-    public User getCurrentUser();
+    User getCurrentUser();
 
-    public PageResponse<UserResponse> getAllUsers(int page, int size);
+    PageResponse<UserResponse> getAllUsers(int page, int size);
 
-    public UserResponse lockUser(Long id);
+    UserResponse lockUser(Long id);
 
-    public UserResponse unlockUser(Long id);
+    UserResponse unlockUser(Long id);
 
 }

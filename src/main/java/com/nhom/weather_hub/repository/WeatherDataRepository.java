@@ -12,10 +12,10 @@ import java.util.Optional;
 @Repository
 public interface WeatherDataRepository extends JpaRepository<WeatherData, Long> {
 
-    public Page<WeatherData> findByStationIdAndRecordAtBetween(Long stationId, Instant from, Instant to, Pageable pageable);
+    Page<WeatherData> findByStationIdAndRecordAtBetween(Long stationId, Instant from, Instant to, Pageable pageable);
 
-    public Optional<WeatherData> findFirstByStationIdOrderByRecordAtDesc(Long stationId);
+    Optional<WeatherData> findFirstByStationIdOrderByRecordAtDesc(Long stationId);
 
-    public void deleteByStationId(Long stationId);
+    void deleteByStationId(Long stationId);
 
 }
