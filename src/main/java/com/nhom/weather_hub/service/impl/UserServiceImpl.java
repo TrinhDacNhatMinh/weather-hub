@@ -71,16 +71,14 @@ public class UserServiceImpl implements UserService {
         Page<UserWithStationCount> userPage = userRepository.findUserWithStationCount(pageable);
         List<UserResponse> content = userPage.getContent()
                 .stream()
-                .map(p -> {
-                    UserResponse response = new UserResponse();
-                    response.setId(p.getId());
-                    response.setName(p.getName());
-                    response.setUsername(p.getUsername());
-                    response.setEmail(p.getEmail());
-                    response.setActive(p.getActive());
-                    response.setStationCount(p.getStationCount());
-                    return response;
-                })
+                .map(p -> new UserResponse(
+                        p.getId(),
+                        p.getName(),
+                        p.getUsername(),
+                        p.getEmail(),
+                        p.getActive(),
+                        p.getStationCount()
+                ))
                 .toList();
         return new PageResponse<>(
                 content,
@@ -103,7 +101,7 @@ public class UserServiceImpl implements UserService {
             userRepository.save(user);
         }
 
-        return userMapper.toResponse(user);
+        return userMapper.toResponse(user, null);
     }
 
     @Override
@@ -117,7 +115,7 @@ public class UserServiceImpl implements UserService {
             userRepository.save(user);
         }
 
-        return userMapper.toResponse(user);
+        return userMapper.toResponse(user, null);
     }
 
     @Override
@@ -126,14 +124,14 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + id));
 
-        if (!user.getActive() ) {
+        if (!user.getActive()) {
             throw new UserNotActiveException();
         }
 
         user.setName(request.name());
 
         userRepository.save(user);
-        return userMapper.toResponse(user);
+        return userMapper.toResponse(user, null);
     }
 
 }

@@ -14,23 +14,28 @@ public class StationMapper {
             return null;
         }
 
-        StationResponse stationResponse = new StationResponse();
-        stationResponse.setId(entity.getId());
-        stationResponse.setName(entity.getName());
-        stationResponse.setLocation(entity.getLocation());
-        stationResponse.setLatitude(entity.getLatitude());
-        stationResponse.setLongitude(entity.getLongitude());
-        stationResponse.setApiKey(entity.getApiKey());
-        stationResponse.setCreatedAt(entity.getCreatedAt());
-        stationResponse.setStatus(status);
-        stationResponse.setActive(entity.getActive());
-        stationResponse.setIsPublic(entity.getIsPublic());
+        Long ownerId = null;
+        String ownerName = null;
+
         if (entity.getUser() != null) {
-            stationResponse.setOwnerId(entity.getUser().getId());
-            stationResponse.setOwnerName(entity.getUser().getName());
+            ownerId = entity.getUser().getId();
+            ownerName = entity.getUser().getName();
         }
 
-        return stationResponse;
+        return new StationResponse(
+                entity.getId(),
+                entity.getName(),
+                entity.getLocation(),
+                entity.getLatitude(),
+                entity.getLongitude(),
+                entity.getApiKey(),
+                entity.getCreatedAt(),
+                status,
+                entity.getActive(),
+                entity.getIsPublic(),
+                ownerId,
+                ownerName
+        );
     }
 
     public void updateEntity(UpdateStationRequest request, Station entity) {

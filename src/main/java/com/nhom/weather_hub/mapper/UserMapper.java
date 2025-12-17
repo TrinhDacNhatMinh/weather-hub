@@ -7,18 +7,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserMapper {
 
-    public UserResponse toResponse(User entity) {
+    public UserResponse toResponse(User entity, Long stationCount) {
         if (entity == null) {
             return null;
         }
 
-        UserResponse userResponse = new UserResponse();
-        userResponse.setId(entity.getId());
-        userResponse.setName(entity.getName());
-        userResponse.setUsername(entity.getUsername());
-        userResponse.setEmail(entity.getEmail());
-        userResponse.setActive(entity.getActive());
-
-        return userResponse;
+        return new UserResponse(
+                entity.getId(),
+                entity.getName(),
+                entity.getUsername(),
+                entity.getEmail(),
+                entity.getActive(),
+                stationCount
+        );
     }
+
 }

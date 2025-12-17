@@ -13,25 +13,27 @@ public class ThresholdMapper {
             return null;
         }
 
-        ThresholdResponse thresholdResponse = new ThresholdResponse();
-        thresholdResponse.setId(entity.getId());
-        thresholdResponse.setTemperatureMin(entity.getTemperatureMin());
-        thresholdResponse.setTemperatureMax(entity.getTemperatureMax());
-        thresholdResponse.setHumidityMin(entity.getHumidityMin());
-        thresholdResponse.setHumidityMax(entity.getHumidityMax());
-        thresholdResponse.setRainfallMax(entity.getRainfallMax());
-        thresholdResponse.setWindSpeedMax(entity.getWindSpeedMax());
-        thresholdResponse.setDustMax(entity.getDustMax());
-        thresholdResponse.setTemperatureActive(entity.getTemperatureActive());
-        thresholdResponse.setHumidityActive(entity.getHumidityActive());
-        thresholdResponse.setRainfallActive(entity.getRainfallActive());
-        thresholdResponse.setWindSpeedActive(entity.getWindSpeedActive());
-        thresholdResponse.setDustActive(entity.getDustActive());
+        Long stationId = null;
         if (entity.getStation() != null) {
-            thresholdResponse.setStationId(entity.getStation().getId());
+            stationId = entity.getStation().getId();
         }
 
-        return thresholdResponse;
+        return new ThresholdResponse(
+                entity.getId(),
+                entity.getTemperatureMin(),
+                entity.getTemperatureMax(),
+                entity.getHumidityMin(),
+                entity.getHumidityMax(),
+                entity.getRainfallMax(),
+                entity.getWindSpeedMax(),
+                entity.getDustMax(),
+                entity.getTemperatureActive(),
+                entity.getHumidityActive(),
+                entity.getRainfallActive(),
+                entity.getWindSpeedActive(),
+                entity.getDustActive(),
+                stationId
+        );
     }
 
     public void updateEntity(UpdateThresholdRequest request, Threshold entity) {

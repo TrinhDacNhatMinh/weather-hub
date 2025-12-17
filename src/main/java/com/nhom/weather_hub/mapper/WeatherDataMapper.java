@@ -30,20 +30,25 @@ public class WeatherDataMapper {
             return null;
         }
 
-        WeatherDataResponse weatherDataResponse = new WeatherDataResponse();
-        weatherDataResponse.setId(entity.getId());
-        weatherDataResponse.setTemperature(entity.getTemperature());
-        weatherDataResponse.setHumidity(entity.getHumidity());
-        weatherDataResponse.setRainfall(entity.getRainfall());
-        weatherDataResponse.setWindSpeed(entity.getWindSpeed());
-        weatherDataResponse.setDust(entity.getDust());
-        weatherDataResponse.setRecordAt(entity.getRecordAt());
+        Long stationId = null;
+        String stationName = null;
+
         if (entity.getStation() != null) {
-            weatherDataResponse.setStationId(entity.getStation().getId());
-            weatherDataResponse.setStationName(entity.getStation().getName());
+            stationId = entity.getStation().getId();
+            stationName = entity.getStation().getName();
         }
 
-        return weatherDataResponse;
+        return new WeatherDataResponse(
+                entity.getId(),
+                entity.getTemperature(),
+                entity.getHumidity(),
+                entity.getWindSpeed(),
+                entity.getRainfall(),
+                entity.getDust(),
+                entity.getRecordAt(),
+                stationId,
+                stationName
+        );
     }
 
 }

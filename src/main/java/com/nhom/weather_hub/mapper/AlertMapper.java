@@ -12,20 +12,27 @@ public class AlertMapper {
             return null;
         }
 
-        AlertResponse alertResponse = new AlertResponse();
-        alertResponse.setId(entity.getId());
-        alertResponse.setMessage(entity.getMessage());
-        alertResponse.setStatus(entity.getStatus().toString());
-        alertResponse.setCreatedAt(entity.getCreatedAt());
+        Long weatherDataId = null;
+        Long stationId = null;
+        String stationName = null;
+
         if (entity.getWeatherData() != null) {
-            alertResponse.setWeatherDataId(entity.getWeatherData().getId());
+            weatherDataId = entity.getWeatherData().getId();
             if (entity.getWeatherData().getStation() != null) {
-                alertResponse.setStationId(entity.getWeatherData().getStation().getId());
-                alertResponse.setStationName(entity.getWeatherData().getStation().getName());
+                stationId = entity.getWeatherData().getStation().getId();
+                stationName = entity.getWeatherData().getStation().getName();
             }
         }
 
-        return alertResponse;
+        return new AlertResponse(
+                entity.getId(),
+                entity.getMessage(),
+                entity.getStatus().toString(),
+                entity.getCreatedAt(),
+                weatherDataId,
+                stationId,
+                stationName
+        );
     }
 
 }
