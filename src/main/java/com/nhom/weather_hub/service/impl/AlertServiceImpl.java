@@ -1,5 +1,6 @@
 package com.nhom.weather_hub.service.impl;
 
+import com.nhom.weather_hub.domain.enums.AlertStatus;
 import com.nhom.weather_hub.domain.enums.ThresholdStatus;
 import com.nhom.weather_hub.domain.records.ThresholdEvaluation;
 import com.nhom.weather_hub.dto.response.AlertResponse;
@@ -99,7 +100,7 @@ public class AlertServiceImpl implements AlertService {
     public Alert createAlert(WeatherData data, ThresholdEvaluation evaluation) {
         Alert alert = new Alert();
         alert.setMessage(generateMessage(evaluation));
-        alert.setStatus(Alert.Status.NEW);
+        alert.setStatus(AlertStatus.NEW);
         alert.setCreatedAt(Instant.now());
         alert.setWeatherData(data);
         alertRepository.save(alert);
@@ -167,7 +168,7 @@ public class AlertServiceImpl implements AlertService {
 
     @Override
     @Transactional
-    public AlertResponse updateStatus(Long id, Alert.Status status) {
+    public AlertResponse updateStatus(Long id, AlertStatus status) {
         Alert alert = alertRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Alert not found with id " + id));
         alert.setStatus(status);
         Alert saved = alertRepository.save(alert);

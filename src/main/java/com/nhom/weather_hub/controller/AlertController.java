@@ -1,8 +1,8 @@
 package com.nhom.weather_hub.controller;
 
+import com.nhom.weather_hub.domain.enums.AlertStatus;
 import com.nhom.weather_hub.dto.response.AlertResponse;
 import com.nhom.weather_hub.dto.response.PageResponse;
-import com.nhom.weather_hub.entity.Alert;
 import com.nhom.weather_hub.service.AlertService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +33,7 @@ public class AlertController {
     @PutMapping("/{id}/status")
     public ResponseEntity<AlertResponse> updateStatus(
             @PathVariable Long id,
-            @RequestParam Alert.Status status) {
+            @RequestParam AlertStatus status) {
         AlertResponse response = alertService.updateStatus(id, status);
         return ResponseEntity.ok(response);
     }
