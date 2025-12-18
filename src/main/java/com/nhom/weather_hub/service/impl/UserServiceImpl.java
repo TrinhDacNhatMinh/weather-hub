@@ -5,7 +5,7 @@ import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.UserResponse;
 import com.nhom.weather_hub.entity.User;
 import com.nhom.weather_hub.exception.ResourceNotFoundException;
-import com.nhom.weather_hub.exception.business.UserNotActiveException;
+import com.nhom.weather_hub.exception.business.AccountNotActiveException;
 import com.nhom.weather_hub.mapper.UserMapper;
 import com.nhom.weather_hub.projection.UserWithStationCount;
 import com.nhom.weather_hub.repository.UserRepository;
@@ -125,7 +125,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + id));
 
         if (!user.getActive()) {
-            throw new UserNotActiveException();
+            throw new AccountNotActiveException();
         }
 
         user.setName(request.name());
