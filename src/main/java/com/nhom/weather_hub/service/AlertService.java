@@ -1,6 +1,5 @@
 package com.nhom.weather_hub.service;
 
-import com.nhom.weather_hub.domain.enums.AlertStatus;
 import com.nhom.weather_hub.domain.records.ThresholdEvaluation;
 import com.nhom.weather_hub.dto.response.AlertResponse;
 import com.nhom.weather_hub.dto.response.PageResponse;
@@ -13,16 +12,16 @@ public interface AlertService {
 
     Optional<ThresholdEvaluation> evaluateThresholds(WeatherData data);
 
-    Alert createAlert(WeatherData data, ThresholdEvaluation thresholdEvaluation);
+    Alert createAlert(WeatherData data, ThresholdEvaluation evaluation);
 
-    AlertResponse getById(Long id);
+    AlertResponse getAlert(Long id);
 
-    PageResponse<AlertResponse> getByUser(int page, int size);
+    PageResponse<AlertResponse> getAlertsOfCurrentUser(int page, int size);
 
-    AlertResponse updateStatus(Long id, AlertStatus status);
+    AlertResponse markAsSeen(Long id);
 
     void deleteAlert(Long id);
 
-    void deleteAllByUser(Long userId);
+    void deleteAlertsOfCurrentUser();
 
 }

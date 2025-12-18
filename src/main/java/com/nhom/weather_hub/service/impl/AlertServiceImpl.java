@@ -7,6 +7,7 @@ import com.nhom.weather_hub.dto.response.AlertResponse;
 import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.entity.Alert;
 import com.nhom.weather_hub.entity.Threshold;
+import com.nhom.weather_hub.entity.User;
 import com.nhom.weather_hub.entity.WeatherData;
 import com.nhom.weather_hub.exception.ResourceNotFoundException;
 import com.nhom.weather_hub.mapper.AlertMapper;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -42,10 +44,10 @@ public class AlertServiceImpl implements AlertService {
                 .orElseThrow(() -> new ResourceNotFoundException("Threshold not found"));
 
         ThresholdStatus temperatureStatus = checkThreshold(
-                        threshold.getTemperatureActive(),
-                        data.getTemperature(),
-                        threshold.getTemperatureMin(),
-                        threshold.getTemperatureMax()
+                threshold.getTemperatureActive(),
+                data.getTemperature(),
+                threshold.getTemperatureMin(),
+                threshold.getTemperatureMax()
         );
         ThresholdStatus humidityStatus = checkThreshold(
                 threshold.getHumidityActive(),
@@ -70,30 +72,16 @@ public class AlertServiceImpl implements AlertService {
         );
 
         boolean hasAlert = temperatureStatus != ThresholdStatus.NORMAL ||
-                        humidityStatus != ThresholdStatus.NORMAL ||
-                        windSpeedStatus != ThresholdStatus.NORMAL ||
-                        rainfallStatus != ThresholdStatus.NORMAL ||
-                        dustStatus != ThresholdStatus.NORMAL;
+                humidityStatus != ThresholdStatus.NORMAL ||
+                windSpeedStatus != ThresholdStatus.NORMAL ||
+                rainfallStatus != ThresholdStatus.NORMAL ||
+                dustStatus != ThresholdStatus.NORMAL;
 
         if (!hasAlert) return Optional.empty();
 
         ThresholdEvaluation evaluation = new ThresholdEvaluation(temperatureStatus, humidityStatus, windSpeedStatus, rainfallStatus, dustStatus);
         return Optional.of(evaluation);
     }
-
-    private ThresholdStatus checkThreshold(boolean active, Float value, Float min, Float max) {
-        if (!active || value == null) return ThresholdStatus.NORMAL;
-        if (value < min) return ThresholdStatus.BELOW_MIN;
-        if (value > max) return ThresholdStatus.ABOVE_MAX;
-        return ThresholdStatus.NORMAL;
-    }
-
-    private ThresholdStatus checkThreshold(boolean active, Float value, Float max) {
-        if (!active || value == null) return ThresholdStatus.NORMAL;
-        if (value > max) return ThresholdStatus.ABOVE_MAX;
-        return ThresholdStatus.NORMAL;
-    }
-
 
     @Override
     @Transactional
@@ -107,40 +95,9 @@ public class AlertServiceImpl implements AlertService {
         return alert;
     }
 
-    private String generateMessage(ThresholdEvaluation evaluation) {
-        List<String> messages = new ArrayList<>();
-
-        if (evaluation.temperature() == ThresholdStatus.BELOW_MIN) {
-            messages.add("Temperature below minimum");
-        } else if (evaluation.temperature() == ThresholdStatus.ABOVE_MAX) {
-            messages.add("Temperature above maximum");
-        }
-
-        if (evaluation.humidity() == ThresholdStatus.BELOW_MIN) {
-            messages.add("Humidity below minimum");
-        } else if (evaluation.humidity() == ThresholdStatus.ABOVE_MAX) {
-            messages.add("Humidity above maximum");
-        }
-
-        if (evaluation.windSpeed() == ThresholdStatus.ABOVE_MAX) {
-            messages.add("Wind speed above maximum");
-        }
-
-        if (evaluation.rainfall() == ThresholdStatus.ABOVE_MAX) {
-            messages.add("Rainfall above maximum");
-        }
-
-        if (evaluation.dust() == ThresholdStatus.ABOVE_MAX) {
-            messages.add("Dust above maximum");
-        }
-
-        return String.join(", ", messages);
-
-    }
-
     @Override
     @Transactional(readOnly = true)
-    public AlertResponse getById(Long id) {
+    public AlertResponse getAlert(Long id) {
         return alertRepository.findById(id)
                 .map(alertMapper::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Alert not found with id " + id));
@@ -148,7 +105,7 @@ public class AlertServiceImpl implements AlertService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<AlertResponse> getByUser(int page, int size) {
+    public PageResponse<AlertResponse> getAlertsOfCurrentUser(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Alert> alerts = alertRepository
                 .findByWeatherData_Station_User_Id(userService.getCurrentUser().getId(), pageable);
@@ -168,9 +125,10 @@ public class AlertServiceImpl implements AlertService {
 
     @Override
     @Transactional
-    public AlertResponse updateStatus(Long id, AlertStatus status) {
-        Alert alert = alertRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Alert not found with id " + id));
-        alert.setStatus(status);
+    public AlertResponse markAsSeen(Long id) {
+        Alert alert = alertRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Alert not found with id " + id));
+        alert.setStatus(AlertStatus.SEEN);
         Alert saved = alertRepository.save(alert);
         return alertMapper.toResponse(saved);
     }
@@ -186,8 +144,42 @@ public class AlertServiceImpl implements AlertService {
 
     @Override
     @Transactional
-    public void deleteAllByUser(Long userId) {
-        alertRepository.deleteAllByWeatherData_Station_User_Id(userId);
+    public void deleteAlertsOfCurrentUser() {
+        User user = userService.getCurrentUser();
+        alertRepository.deleteAllByWeatherData_Station_User_Id(user.getId());
     }
+
+    private ThresholdStatus checkThreshold(boolean active, Float value, Float min, Float max) {
+        if (!active || value == null) return ThresholdStatus.NORMAL;
+        if (value < min) return ThresholdStatus.BELOW_MIN;
+        if (value > max) return ThresholdStatus.ABOVE_MAX;
+        return ThresholdStatus.NORMAL;
+    }
+
+    private ThresholdStatus checkThreshold(boolean active, Float value, Float max) {
+        if (!active || value == null) return ThresholdStatus.NORMAL;
+        if (value > max) return ThresholdStatus.ABOVE_MAX;
+        return ThresholdStatus.NORMAL;
+    }
+
+    private String generateMessage(ThresholdEvaluation e) {
+        List<String> messages = new ArrayList<>();
+
+        Map<String, ThresholdStatus> map = Map.of(
+                "Temperature", e.temperature(),
+                "Humidity", e.humidity(),
+                "Wind speed", e.windSpeed(),
+                "Rainfall", e.rainfall(),
+                "Dust", e.dust()
+        );
+
+        map.forEach((name, status) -> {
+            if (status == ThresholdStatus.BELOW_MIN) messages.add(name + " below minimum");
+            else if (status == ThresholdStatus.ABOVE_MAX) messages.add(name + " above maximum");
+        });
+
+        return String.join(", ", messages);
+    }
+
 
 }
