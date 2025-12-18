@@ -14,10 +14,7 @@ import com.nhom.weather_hub.entity.RefreshToken;
 import com.nhom.weather_hub.entity.Role;
 import com.nhom.weather_hub.entity.User;
 import com.nhom.weather_hub.entity.VerificationToken;
-import com.nhom.weather_hub.exception.business.EmailAlreadyExistsException;
-import com.nhom.weather_hub.exception.business.InvalidPasswordException;
-import com.nhom.weather_hub.exception.business.UserNotActiveException;
-import com.nhom.weather_hub.exception.business.UsernameAlreadyExistsException;
+import com.nhom.weather_hub.exception.business.*;
 import com.nhom.weather_hub.repository.RefreshTokenRepository;
 import com.nhom.weather_hub.repository.UserRepository;
 import com.nhom.weather_hub.repository.VerificationTokenRepository;
@@ -28,7 +25,6 @@ import com.nhom.weather_hub.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,80 +50,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Value("${jwt.refresh-expiration}")
     private long refreshExpiration;
-
-    @Override
-    @Transactional
-    public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByUsername(request.username())
-                .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new BadCredentialsException("Invalid username or password");
-        }
-        if (!user.getActive()) {
-            throw new DisabledException("Account is not active");
-        }
-        LoginPolicy.validate(user, request.accessChannel());
-        refreshTokenRepository.deleteByUser(user);
-
-        String accessToken = jwtUtil.generateAccessToken(user.getUsername());
-        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
-
-        RefreshToken tokenEntity = RefreshToken.builder()
-                .user(user)
-                .token(refreshToken)
-                .expiryDate(Instant.now().plusMillis(refreshExpiration))
-                .build();
-        refreshTokenRepository.save(tokenEntity);
-
-        return new LoginResponse(accessToken, refreshToken, user.getName(), user.getEmail());
-    }
-
-    @Override
-    @Transactional
-    public void logout(String authHeader) {
-        String token = extractToken(authHeader);
-        refreshTokenRepository.deleteByToken(token);
-    }
-
-    private String extractToken(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new BadCredentialsException("Invalid Authorization header");
-        }
-        return authHeader.substring(7);
-    }
-
-    @Override
-    @Transactional
-    public AuthResponse refreshToken(RefreshTokenRequest request) {
-        RefreshToken tokenEntity = refreshTokenRepository.findByToken(request.refreshToken())
-                .orElseThrow(() -> new BadCredentialsException("Refresh token not found"));
-
-        if (tokenEntity.getExpiryDate().isBefore(Instant.now())) {
-            refreshTokenRepository.delete(tokenEntity);
-            throw new BadCredentialsException("Refresh token expired");
-        }
-        if (!jwtUtil.validateToken(request.refreshToken())) {
-            throw new BadCredentialsException("Invalid refresh token");
-        }
-
-        String username = jwtUtil.getUsernameFromToken(request.refreshToken());
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new BadCredentialsException("User not found"));
-
-        refreshTokenRepository.deleteByUser(user);
-
-        String newAccessToken = jwtUtil.generateAccessToken(username);
-        String newRefreshToken = jwtUtil.generateRefreshToken(username);
-
-        RefreshToken newTokenEntity = RefreshToken.builder()
-                .user(user)
-                .token(newRefreshToken)
-                .expiryDate(Instant.now().plusMillis(refreshExpiration))
-                .build();
-        refreshTokenRepository.save(newTokenEntity);
-
-        return new AuthResponse(newAccessToken, newRefreshToken);
-    }
 
     @Override
     @Transactional
@@ -172,9 +94,9 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public VerifyResponse verifyEmail(String token) {
         VerificationToken verificationToken = verificationTokenRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid verify token"));
+                .orElseThrow(() -> new VerifyTokenException("Invalid verify token"));
         if (verificationToken.getExpiryDate().isBefore(Instant.now())) {
-            throw new IllegalArgumentException("Token expired");
+            throw new VerifyTokenException("Verify token expired");
         }
 
         User user = verificationToken.getUser();
@@ -192,11 +114,78 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
+    public LoginResponse login(LoginRequest request) {
+        User user = userRepository.findByUsername(request.username())
+                .orElseThrow(InvalidCredentialsException::new);
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new InvalidCredentialsException();
+        }
+        if (!user.getActive()) {
+            throw new AccountNotActiveException();
+        }
+        LoginPolicy.validate(user, request.accessChannel());
+        refreshTokenRepository.deleteByUser(user);
+
+        String accessToken = jwtUtil.generateAccessToken(user.getUsername());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
+
+        RefreshToken tokenEntity = RefreshToken.builder()
+                .user(user)
+                .token(refreshToken)
+                .expiryDate(Instant.now().plusMillis(refreshExpiration))
+                .build();
+        refreshTokenRepository.save(tokenEntity);
+
+        return new LoginResponse(accessToken, refreshToken, user.getName(), user.getEmail());
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse refreshToken(RefreshTokenRequest request) {
+        RefreshToken tokenEntity = refreshTokenRepository.findByToken(request.refreshToken())
+                .orElseThrow(() -> new RefreshTokenException("Refresh token not found"));
+
+        if (tokenEntity.getExpiryDate().isBefore(Instant.now())) {
+            refreshTokenRepository.delete(tokenEntity);
+            throw new RefreshTokenException("Refresh token expired");
+        }
+        if (!jwtUtil.validateToken(request.refreshToken())) {
+            throw new RefreshTokenException("Invalid refresh token");
+        }
+
+        String username = jwtUtil.getUsernameFromToken(request.refreshToken());
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RefreshTokenException("User not found"));
+
+        refreshTokenRepository.deleteByUser(user);
+
+        String newAccessToken = jwtUtil.generateAccessToken(username);
+        String newRefreshToken = jwtUtil.generateRefreshToken(username);
+
+        RefreshToken newTokenEntity = RefreshToken.builder()
+                .user(user)
+                .token(newRefreshToken)
+                .expiryDate(Instant.now().plusMillis(refreshExpiration))
+                .build();
+        refreshTokenRepository.save(newTokenEntity);
+
+        return new AuthResponse(newAccessToken, newRefreshToken);
+    }
+
+    @Override
+    @Transactional
+    public void logout(String authHeader) {
+        String token = extractToken(authHeader);
+        refreshTokenRepository.deleteByToken(token);
+    }
+
+    @Override
+    @Transactional
     public void changePassword(ChangePasswordRequest request) {
         User user = userService.getCurrentUser();
 
         if (!user.getActive()) {
-            throw new UserNotActiveException();
+            throw new AccountNotActiveException();
         }
 
         if (!passwordEncoder.matches(request.oldPassword(), user.getPassword())) {
@@ -205,6 +194,13 @@ public class AuthServiceImpl implements AuthService {
 
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
+    }
+
+    private String extractToken(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new BadCredentialsException("Invalid Authorization header");
+        }
+        return authHeader.substring(7);
     }
 
 }
