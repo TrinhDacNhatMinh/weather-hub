@@ -1,5 +1,6 @@
 package com.nhom.weather_hub.entity;
 
+import com.nhom.weather_hub.domain.enums.AlertStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,7 +32,7 @@ public class Alert {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private Status status;
+    private AlertStatus status;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -39,11 +40,5 @@ public class Alert {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "weather_data_id", nullable = false, unique = true)
     private WeatherData weatherData;
-
-    public enum Status {
-        NEW,
-        SENT,
-        SEEN
-    }
 
 }
