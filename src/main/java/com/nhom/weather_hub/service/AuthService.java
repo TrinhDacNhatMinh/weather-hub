@@ -11,15 +11,15 @@ import com.nhom.weather_hub.dto.response.VerifyResponse;
 
 public interface AuthService {
 
-    LoginResponse login(LoginRequest request);
-
-    void logout(String authHeader);
-
-    AuthResponse refreshToken(RefreshTokenRequest request);
-
     RegisterResponse register(RegisterRequest request);
 
     VerifyResponse verifyEmail(String token);
+
+    LoginResponse login(LoginRequest request);
+
+    AuthResponse refreshToken(RefreshTokenRequest request);
+
+    void logout(String authHeader);
 
     void changePassword(ChangePasswordRequest request);
 
