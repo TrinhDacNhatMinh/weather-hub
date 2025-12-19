@@ -11,4 +11,6 @@ public interface ThresholdRepository extends JpaRepository<Threshold, Long> {
 
     Optional<Threshold> findByStationId(Long stationId);
 
+    boolean existsByStationId(Long stationId);
+
 }
