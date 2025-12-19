@@ -24,12 +24,12 @@ public class ThresholdServiceImpl implements ThresholdService {
 
     @Override
     @Transactional
-    public void createDefaultThreshold(Long stationId) {
+    public void initializeDefaultThreshold(Long stationId) {
         Station station = stationRepository.findById(stationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Station not found with id " + stationId));
-        thresholdRepository.findByStationId(stationId).ifPresent(threshold -> {
+        if (thresholdRepository.existsByStationId(stationId)) {
             throw new ThresholdAlreadyExistsException(stationId);
-        });
+        }
 
         Threshold threshold = Threshold.builder()
                 .temperatureMin(10f)
@@ -52,7 +52,7 @@ public class ThresholdServiceImpl implements ThresholdService {
 
     @Override
     @Transactional(readOnly = true)
-    public ThresholdResponse getByStationId(Long stationId) {
+    public ThresholdResponse getThresholdByStationId(Long stationId) {
         Threshold threshold = thresholdRepository.findByStationId(stationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Threshold not found with station id " + stationId));
         return thresholdMapper.toResponse(threshold);

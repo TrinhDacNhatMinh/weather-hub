@@ -5,9 +5,9 @@ import com.nhom.weather_hub.dto.response.ThresholdResponse;
 
 public interface ThresholdService {
 
-    void createDefaultThreshold(Long stationId);
+    void initializeDefaultThreshold(Long stationId);
 
-    ThresholdResponse getByStationId(Long stationId);
+    ThresholdResponse getThresholdByStationId(Long stationId);
 
     ThresholdResponse updateThreshold(Long id, UpdateThresholdRequest request);
 

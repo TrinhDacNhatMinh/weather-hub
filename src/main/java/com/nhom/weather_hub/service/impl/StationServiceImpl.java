@@ -51,7 +51,7 @@ public class StationServiceImpl implements StationService {
         station.setActive(false);
         station.setIsPublic(false);
         stationRepository.save(station);
-        thresholdService.createDefaultThreshold(station.getId());
+        thresholdService.initializeDefaultThreshold(station.getId());
         return station.getApiKey();
     }
 
