@@ -9,12 +9,8 @@ public interface WeatherDataService {
 
     void handleIncomingMqttData(String payload);
 
-    WeatherDataResponse getWeatherDataById(Long id);
+    WeatherDataResponse getWeatherData(Long id);
 
-    PageResponse<WeatherDataResponse> getWeatherData(Long stationId, Instant from, Instant to, int page, int size);
-
-    WeatherDataResponse getLatestWeatherData(Long stationId);
-
-    void deleteByStation(Long stationId);
+    void deleteWeatherDataByStation(Long stationId);
 
 }

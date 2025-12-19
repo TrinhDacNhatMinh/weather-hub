@@ -105,42 +105,16 @@ public class WeatherDataServiceImpl implements WeatherDataService {
 
     @Override
     @Transactional(readOnly = true)
-    public WeatherDataResponse getWeatherDataById(Long id) {
+    public WeatherDataResponse getWeatherData(Long id) {
         WeatherData weatherData = weatherDataRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Weather data not found with id " + id));
         return weatherDataMapper.toResponse(weatherData);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public PageResponse<WeatherDataResponse> getWeatherData(Long stationId, Instant from, Instant to, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<WeatherData> weatherDataPage = weatherDataRepository.findByStationIdAndRecordAtBetween(stationId, from, to, pageable);
-        List<WeatherDataResponse> content = weatherDataPage.getContent()
-                .stream()
-                .map(weatherDataMapper::toResponse)
-                .toList();
-        return new PageResponse<>(
-                content,
-                weatherDataPage.getNumber(),
-                weatherDataPage.getSize(),
-                weatherDataPage.getTotalElements(),
-                weatherDataPage.getTotalPages(),
-                weatherDataPage.isLast()
-        );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public WeatherDataResponse getLatestWeatherData(Long stationId) {
-        WeatherData latest = weatherDataRepository.findFirstByStationIdOrderByRecordAtDesc(stationId)
-                .orElseThrow(() -> new ResourceNotFoundException("No data found"));
-        return weatherDataMapper.toResponse(latest);
-    }
 
     @Override
     @Transactional
-    public void deleteByStation(Long stationId) {
+    public void deleteWeatherDataByStation(Long stationId) {
         if (!stationRepository.existsById(stationId)) {
             throw new ResourceNotFoundException("Station not found with id " + stationId);
         }
