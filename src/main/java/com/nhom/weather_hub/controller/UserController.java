@@ -77,10 +77,11 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/me")
     @Operation(
             summary = "Update user information",
-            description = "Update information of a user by ID. Only the user themselves can perform this action."
+            description = "Update information of the current authenticated user. " +
+                    "Only the user themselves can perform this action."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User updated successfully"),
@@ -90,10 +91,9 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<UserResponse> updateUser(
-            @PathVariable Long id,
+    public ResponseEntity<UserResponse> updateOfCurrentUser(
             @RequestBody @Valid UpdateUserRequest request) {
-        UserResponse response = userService.updateUser(id, request);
+        UserResponse response = userService.updateOfCurrentUser(request);
         return ResponseEntity.ok(response);
     }
 

@@ -16,6 +16,6 @@ public interface UserService extends UserDetailsService {
 
     UserResponse unlockUser(Long id);
 
-    UserResponse updateUser(Long id, UpdateUserRequest request);
+    UserResponse updateOfCurrentUser(UpdateUserRequest request);
 
 }

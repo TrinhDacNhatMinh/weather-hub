@@ -126,9 +126,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponse updateUser(Long id, UpdateUserRequest request) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + id));
+    public UserResponse updateOfCurrentUser(UpdateUserRequest request) {
+        User user = getCurrentUser();
 
         if (!user.getActive()) {
             throw new AccountNotActiveException();
