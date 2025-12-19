@@ -179,11 +179,12 @@ public class StationController {
     @GetMapping("/api-key/{apiKey}")
     @Operation(
             summary = "Get station by API key",
-            description = "Get station by API key."
+            description = "Get station by API key. Requires admin permission."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successfully retrieved station"),
             @ApiResponse(responseCode = "400", description = "Invalid API key"),
+            @ApiResponse(responseCode = "403", description = "Forbidden, admin permission required"),
             @ApiResponse(responseCode = "404", description = "Station not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
