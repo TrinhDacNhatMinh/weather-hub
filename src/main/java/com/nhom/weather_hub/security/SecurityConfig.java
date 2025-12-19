@@ -40,16 +40,95 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+
+                        // =========================
+                        // PUBLIC
+                        // =========================
                         .requestMatchers(
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/api/auth/**"
+                                "/v3/api-docs/**"
                         ).permitAll()
-                        .requestMatchers("/api/users/**")
-                        .hasRole("ADMIN")
+
                         .requestMatchers(
-                                HttpMethod.POST, "/api/weather-data/**"
+                                "/api/auth/register",
+                                "/api/auth/login",
+                                "/api/auth/verify",
+                                "/api/auth/refresh-token"
                         ).permitAll()
+
+                        // =========================
+                        // ROLE / AUTHORITY (ADMIN)
+                        // =========================
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/stations/api-key/**",
+                                "/api/stations/all",
+                                "/api/stations/users/**"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/stations",
+                                "/api/stations/batch"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/stations/*"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/users"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/users/*/lock",
+                                "/api/users/*/unlock"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/weather-data/station")
+                        .hasRole("ADMIN")
+
+                        // =========================
+                        // AUTHENTICATED
+                        // =========================
+                        .requestMatchers(
+                                "/api/auth/logout",
+                                "/api/auth/change-password"
+                        ).authenticated()
+
+                        .requestMatchers("/api/alerts/**").authenticated()
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/stations/user/me/stations",
+                                "/api/stations/public",
+                                "/api/stations/*",
+                                "/api/stations/*/threshold"
+                        ).authenticated()
+
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/stations/attach",
+                                "/api/stations/*",
+                                "/api/stations/*/public"
+                        ).authenticated()
+
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/stations/*/user"
+                        ).authenticated()
+
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/thresholds/*"
+                        ).authenticated()
+
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/users/*"
+                        ).authenticated()
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/weather-data")
+                        .authenticated()
+
+                        // =========================
+                        // FALLBACK
+                        // =========================
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
