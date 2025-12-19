@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<UserResponse> getAllUsers(int page, int size) {
+    public PageResponse<UserResponse> getUsers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<UserWithStationCount> userPage = userRepository.findUserWithStationCount(pageable);
         List<UserResponse> content = userPage.getContent()
@@ -126,7 +126,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponse updateUserInfo(Long id, UpdateUserRequest request) {
+    public UserResponse updateUser(Long id, UpdateUserRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + id));
 

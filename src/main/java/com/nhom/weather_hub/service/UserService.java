@@ -10,12 +10,12 @@ public interface UserService extends UserDetailsService {
 
     User getCurrentUser();
 
-    PageResponse<UserResponse> getAllUsers(int page, int size);
+    PageResponse<UserResponse> getUsers(int page, int size);
 
     UserResponse lockUser(Long id);
 
     UserResponse unlockUser(Long id);
 
-    UserResponse updateUserInfo(Long id, UpdateUserRequest request);
+    UserResponse updateUser(Long id, UpdateUserRequest request);
 
 }
