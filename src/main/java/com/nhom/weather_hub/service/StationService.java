@@ -13,11 +13,11 @@ public interface StationService {
 
     String createStation();
 
-    List<String> createStations(int n);
+    List<String> createStationsBatch(int n);
 
-    StationResponse addStation(AddStationRequest request);
+    StationResponse addStationToUser(AddStationRequest request);
 
-    PageResponse<StationResponse> getMyStations(int page, int size);
+    PageResponse<StationResponse> getStationsOfCurrentUser(int page, int size);
 
     PageResponse<StationResponse> getStationsByUserId(Long userId, int page, int size);
 
@@ -29,13 +29,13 @@ public interface StationService {
 
     StationResponse getStationByApiKey(String apiKey);
 
-    StationStatus getStatus(Instant updatedAt);
+    StationStatus getStationStatus(Instant updatedAt);
 
     StationResponse updateStation(Long id, UpdateStationRequest request);
 
     StationResponse updateStationSharing(Long id);
 
-    StationResponse detachStation(Long id);
+    void detachStationFromUser(Long id);
 
     void deleteStation(Long id);
 

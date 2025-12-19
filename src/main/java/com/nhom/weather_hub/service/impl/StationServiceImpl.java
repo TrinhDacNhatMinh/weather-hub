@@ -55,24 +55,9 @@ public class StationServiceImpl implements StationService {
         return station.getApiKey();
     }
 
-    private String generateApiKey() {
-        SecureRandom random = new SecureRandom();
-        String apiKey;
-        do {
-            apiKey = random.ints(16, 0, CHAR_POOL.length())
-                    .mapToObj(CHAR_POOL::charAt)
-                    .collect(StringBuilder::new,
-                            StringBuilder::append,
-                            StringBuilder::append)
-                    .toString()
-                    .replaceAll("(.{4})(?!$)", "$1-");
-        } while (stationRepository.existsByApiKey(apiKey));
-        return apiKey;
-    }
-
     @Override
     @Transactional
-    public List<String> createStations(int n) {
+    public List<String> createStationsBatch(int n) {
         List<String> apiKeys = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             apiKeys.add(createStation());
@@ -82,7 +67,7 @@ public class StationServiceImpl implements StationService {
 
     @Override
     @Transactional
-    public StationResponse addStation(AddStationRequest request) {
+    public StationResponse addStationToUser(AddStationRequest request) {
         Station station = stationRepository.findByApiKey(request.apiKey())
                 .orElseThrow(() -> new ResourceNotFoundException("Station not found with api key " + request.apiKey()));
         if (station.getUser() != null) {
@@ -95,18 +80,18 @@ public class StationServiceImpl implements StationService {
         station.setLongitude(request.longitude());
         station.setActive(true);
         Station updated = stationRepository.save(station);
-        return stationMapper.toResponse(updated, getStatus(updated.getUpdatedAt()));
+        return stationMapper.toResponse(updated, getStationStatus(updated.getUpdatedAt()));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<StationResponse> getMyStations(int page, int size) {
+    public PageResponse<StationResponse> getStationsOfCurrentUser(int page, int size) {
         User currentUser = userService.getCurrentUser();
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Station> stationPage = stationRepository.findByUserId(currentUser.getId(), pageable);
         List<StationResponse> content = stationPage.getContent()
                 .stream()
-                .map(station -> stationMapper.toResponse(station, getStatus(station.getUpdatedAt())))
+                .map(station -> stationMapper.toResponse(station, getStationStatus(station.getUpdatedAt())))
                 .toList();
         return new PageResponse<>(
                 content,
@@ -125,7 +110,7 @@ public class StationServiceImpl implements StationService {
         Page<Station> stationPage = stationRepository.findByUserId(userId, pageable);
         List<StationResponse> content = stationPage.getContent()
                 .stream()
-                .map(station -> stationMapper.toResponse(station, getStatus(station.getUpdatedAt())))
+                .map(station -> stationMapper.toResponse(station, getStationStatus(station.getUpdatedAt())))
                 .toList();
         return new PageResponse<>(
                 content,
@@ -144,7 +129,7 @@ public class StationServiceImpl implements StationService {
         Page<Station> stationPage = stationRepository.findByIsPublicTrue(pageable);
         List<StationResponse> content = stationPage.getContent()
                 .stream()
-                .map(station -> stationMapper.toResponse(station, getStatus(station.getUpdatedAt())))
+                .map(station -> stationMapper.toResponse(station, getStationStatus(station.getUpdatedAt())))
                 .toList();
         return new PageResponse<>(
                 content,
@@ -163,7 +148,7 @@ public class StationServiceImpl implements StationService {
         Page<Station> stationPage = stationRepository.findAll(pageable);
         List<StationResponse> content = stationPage.getContent()
                 .stream()
-                .map(station -> stationMapper.toResponse(station, getStatus(station.getUpdatedAt())))
+                .map(station -> stationMapper.toResponse(station, getStationStatus(station.getUpdatedAt())))
                 .toList();
         return new PageResponse<>(
                 content,
@@ -180,7 +165,7 @@ public class StationServiceImpl implements StationService {
     public StationResponse getStationById(Long id) {
         Station station = stationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Station not found with id " + id));
-        return stationMapper.toResponse(station, getStatus(station.getUpdatedAt()));
+        return stationMapper.toResponse(station, getStationStatus(station.getUpdatedAt()));
     }
 
     @Override
@@ -188,11 +173,11 @@ public class StationServiceImpl implements StationService {
     public StationResponse getStationByApiKey(String apiKey) {
         Station station = stationRepository.findByApiKey(apiKey)
                 .orElseThrow(() -> new ResourceNotFoundException("Station not found with api key " + apiKey));
-        return stationMapper.toResponse(station, getStatus(station.getUpdatedAt()));
+        return stationMapper.toResponse(station, getStationStatus(station.getUpdatedAt()));
     }
 
     @Override
-    public StationStatus getStatus(Instant updatedAt) {
+    public StationStatus getStationStatus(Instant updatedAt) {
         if (updatedAt == null) {
             return StationStatus.OFFLINE;
         }
@@ -215,7 +200,7 @@ public class StationServiceImpl implements StationService {
         checkOwnership(existing);
         stationMapper.updateEntity(request, existing);
         Station updated = stationRepository.save(existing);
-        return stationMapper.toResponse(updated, getStatus(updated.getUpdatedAt()));
+        return stationMapper.toResponse(updated, getStationStatus(updated.getUpdatedAt()));
     }
 
     @Override
@@ -226,12 +211,12 @@ public class StationServiceImpl implements StationService {
         checkOwnership(station);
         station.setIsPublic(!station.getIsPublic());
         Station updated = stationRepository.save(station);
-        return stationMapper.toResponse(updated, getStatus(updated.getUpdatedAt()));
+        return stationMapper.toResponse(updated, getStationStatus(updated.getUpdatedAt()));
     }
 
     @Override
     @Transactional
-    public StationResponse detachStation(Long id) {
+    public void detachStationFromUser(Long id) {
         Station station = stationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Station not found with id " + id));
         checkOwnership(station);
@@ -241,14 +226,6 @@ public class StationServiceImpl implements StationService {
         station.setIsPublic(false);
 
         Station updated = stationRepository.save(station);
-        return stationMapper.toResponse(updated, getStatus(updated.getUpdatedAt()));
-    }
-
-    private void checkOwnership(Station station) {
-        Long currentUserId = userService.getCurrentUser().getId();
-        if (station.getUser() == null || !Objects.equals(station.getUser().getId(), currentUserId)) {
-            throw new PermissionDeniedException();
-        }
     }
 
     @Override
@@ -258,6 +235,28 @@ public class StationServiceImpl implements StationService {
             throw new ResourceNotFoundException("Station not found with id " + id);
         }
         stationRepository.deleteById(id);
+    }
+
+    private String generateApiKey() {
+        SecureRandom random = new SecureRandom();
+        String apiKey;
+        do {
+            apiKey = random.ints(16, 0, CHAR_POOL.length())
+                    .mapToObj(CHAR_POOL::charAt)
+                    .collect(StringBuilder::new,
+                            StringBuilder::append,
+                            StringBuilder::append)
+                    .toString()
+                    .replaceAll("(.{4})(?!$)", "$1-");
+        } while (stationRepository.existsByApiKey(apiKey));
+        return apiKey;
+    }
+
+    private void checkOwnership(Station station) {
+        Long currentUserId = userService.getCurrentUser().getId();
+        if (station.getUser() == null || !Objects.equals(station.getUser().getId(), currentUserId)) {
+            throw new PermissionDeniedException();
+        }
     }
 
 }
