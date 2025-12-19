@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @OpenAPIDefinition(
 		info = @Info(
 				title = "Weather Hub API",
-				version = "1.0",
+				version = "2.0",
 				description = "Comprehensive API documentation for the Weather Hub application."
 		)
 )
