@@ -29,10 +29,10 @@ public class Station {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "name")
+    @Column(name = "name", length = 100)
     private String name;
 
-    @Column(name = "location")
+    @Column(name = "location", length = 100)
     private String location;
 
     @Column(name = "latitude", precision = 10, scale = 6)
