@@ -4,7 +4,9 @@ import com.nhom.weather_hub.dto.request.AddStationRequest;
 import com.nhom.weather_hub.dto.request.UpdateStationRequest;
 import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.StationResponse;
+import com.nhom.weather_hub.dto.response.ThresholdResponse;
 import com.nhom.weather_hub.service.StationService;
+import com.nhom.weather_hub.service.ThresholdService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -27,6 +29,7 @@ import java.util.List;
 public class StationController {
 
     private final StationService stationService;
+    private final ThresholdService thresholdService;
 
     @PostMapping
     @Operation(
@@ -190,6 +193,25 @@ public class StationController {
     })
     public ResponseEntity<StationResponse> getStationByApiKey(@PathVariable @NotBlank String apiKey) {
         StationResponse response = stationService.getStationByApiKey(apiKey);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{stationId}/threshold")
+    @Operation(
+            summary = "Get threshold of a station",
+            description = "Retrieve threshold configuration associated with the specified station. " +
+                    "Only the station owner can access this endpoint."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Threshold retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized, user not logged in"),
+            @ApiResponse(responseCode = "403", description = "Forbidden, access denied"),
+            @ApiResponse(responseCode = "404", description = "Station or threshold not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<ThresholdResponse> getThresholdByStationId(@PathVariable Long stationId) {
+        ThresholdResponse response =
+                thresholdService.getThresholdByStationId(stationId);
         return ResponseEntity.ok(response);
     }
 
