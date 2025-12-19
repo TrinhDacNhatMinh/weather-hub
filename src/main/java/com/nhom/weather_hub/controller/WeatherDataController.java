@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/weather-data")
 @RequiredArgsConstructor
-@Tag(name = "", description = "")
+@Tag(name = "Weather Data", description = "Endpoints for querying and managing weather data records")
 public class WeatherDataController {
 
     private final WeatherDataService weatherDataService;
