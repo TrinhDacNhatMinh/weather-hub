@@ -9,9 +9,10 @@ public class LoginPolicy {
     public static void validate(User user, AccessChannel channel) {
         RoleName role = user.getRole().getName();
 
-        if (role == RoleName.ROLE_ADMIN && channel == AccessChannel.MOBILE) {
+        if (role == RoleName.ROLE_ADMIN &&
+                (channel == AccessChannel.MOBILE || channel == AccessChannel.DESKTOP)) {
             throw new LoginChannelNotAllowedException(
-                    "Admin is not allowed to login from mobile"
+                    "Admin is not allowed to login from mobile or desktop"
             );
         }
 
