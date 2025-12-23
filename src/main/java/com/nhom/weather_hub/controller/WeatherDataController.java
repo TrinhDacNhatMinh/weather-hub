@@ -1,14 +1,18 @@
 package com.nhom.weather_hub.controller;
 
+import com.nhom.weather_hub.dto.response.DailyWeatherSummaryResponse;
 import com.nhom.weather_hub.dto.response.WeatherDataResponse;
 import com.nhom.weather_hub.service.WeatherDataService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/weather-data")
@@ -32,6 +36,27 @@ public class WeatherDataController {
     public ResponseEntity<WeatherDataResponse> getWeatherData(@PathVariable Long id) {
         WeatherDataResponse response = weatherDataService.getWeatherData(id);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/stations/{stationId}/daily-summary")
+    @Operation(
+            summary = "Get daily weather summary by station ID",
+            description = "Retrieve aggregated daily weather data for a specific station. " +
+                    "Each day includes minimum, maximum, and average values of weather metrics " +
+                    "and total rainfall, optimized for chart visualization."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Weather data retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request param"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized, authentication required"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<List<DailyWeatherSummaryResponse>> getDailySummary(
+            @PathVariable Long stationId,
+            @RequestParam(defaultValue = "7") @Min(1) int days
+    ) {
+        List<DailyWeatherSummaryResponse> responses = weatherDataService.getDailySummary(stationId, days);
+        return ResponseEntity.ok(responses);
     }
 
     @DeleteMapping("/station")

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhom.weather_hub.domain.records.ThresholdEvaluation;
 import com.nhom.weather_hub.domain.records.WeatherDataRequest;
 import com.nhom.weather_hub.dto.response.AlertResponse;
-import com.nhom.weather_hub.dto.response.PageResponse;
+import com.nhom.weather_hub.dto.response.DailyWeatherSummaryResponse;
 import com.nhom.weather_hub.dto.response.WeatherDataResponse;
 import com.nhom.weather_hub.entity.Alert;
 import com.nhom.weather_hub.entity.Station;
@@ -15,6 +15,7 @@ import com.nhom.weather_hub.event.WeatherDataCreatedEvent;
 import com.nhom.weather_hub.exception.ResourceNotFoundException;
 import com.nhom.weather_hub.mapper.AlertMapper;
 import com.nhom.weather_hub.mapper.WeatherDataMapper;
+import com.nhom.weather_hub.projection.DailyWeatherSummaryProjection;
 import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.repository.WeatherDataRepository;
 import com.nhom.weather_hub.service.AlertService;
@@ -23,13 +24,11 @@ import com.nhom.weather_hub.util.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -111,6 +110,39 @@ public class WeatherDataServiceImpl implements WeatherDataService {
         return weatherDataMapper.toResponse(weatherData);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<DailyWeatherSummaryResponse> getDailySummary(Long stationId, int days) {
+
+        Instant to = Instant.now();
+        Instant from = to.minus(days, ChronoUnit.DAYS);
+
+        List<DailyWeatherSummaryProjection> projections = weatherDataRepository.findDailySummary(stationId, from, to);
+
+        return projections.stream()
+                .map(p -> new DailyWeatherSummaryResponse(
+                        p.getDate(),
+
+                        p.getMinTemperature(),
+                        p.getMaxTemperature(),
+                        p.getAvgTemperature(),
+
+                        p.getMinHumidity(),
+                        p.getMaxHumidity(),
+                        p.getAvgHumidity(),
+
+                        p.getMinWindSpeed(),
+                        p.getMaxWindSpeed(),
+                        p.getAvgWindSpeed(),
+
+                        p.getMinDust(),
+                        p.getMaxDust(),
+                        p.getAvgDust(),
+
+                        p.getTotalRainfall()
+                ))
+                .toList();
+    }
 
     @Override
     @Transactional
