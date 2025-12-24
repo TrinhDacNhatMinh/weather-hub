@@ -218,7 +218,7 @@ public class StationController {
     @PutMapping("/{id}")
     @Operation(
             summary = "Update station",
-            description = "Update station information. Only the station owner or admin can perform this action."
+            description = "Update station information. Only the station owner can perform this action."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Station successfully updated"),
