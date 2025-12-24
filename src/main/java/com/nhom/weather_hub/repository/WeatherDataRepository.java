@@ -40,7 +40,7 @@ public interface WeatherDataRepository extends JpaRepository<WeatherData, Long> 
             FROM weather_data
             WHERE station_id = :stationId AND record_at >= :from AND record_at < :to
             GROUP BY DATE(record_at)
-            ORDER BY DATE(record_at) DESC
+            ORDER BY DATE(record_at) ASC
             """, nativeQuery = true)
     List<DailyWeatherSummaryProjection> findDailySummary(
             @Param("stationId") Long stationId,
