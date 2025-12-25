@@ -41,7 +41,7 @@ public class Station {
     @Column(name = "longitude", precision = 10, scale = 6)
     private BigDecimal longitude;
 
-    @Column(name = "api_key", nullable = false, unique = true)
+    @Column(name = "api_key", length = 50, nullable = false, unique = true)
     private String apiKey;
 
     @Column(name = "created_at", nullable = false)
