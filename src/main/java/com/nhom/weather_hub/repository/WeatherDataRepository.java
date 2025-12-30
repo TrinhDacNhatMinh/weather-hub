@@ -3,6 +3,7 @@ package com.nhom.weather_hub.repository;
 import com.nhom.weather_hub.entity.WeatherData;
 import com.nhom.weather_hub.projection.DailyWeatherSummaryProjection;
 import com.nhom.weather_hub.projection.HourWeatherSummaryProjection;
+import com.nhom.weather_hub.projection.StationAvgTemperatureProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -69,7 +70,20 @@ public interface WeatherDataRepository extends JpaRepository<WeatherData, Long> 
             @Param("to") Instant to
     );
 
-
+    @Query(value = """
+            SELECT s.id,s.`name`, s.latitude, s.longitude, ROUND(AVG(w.temperature), 2) AS avg_temperature
+            FROM stations s
+            JOIN weather_data w ON s.id = w.station_id AND w.record_at >= :from AND w.record_at < :to
+            WHERE s.is_public = 1 OR s.id = :stationId
+            GROUP BY s.id
+            """, nativeQuery = true
+    )
+    List<StationAvgTemperatureProjection> findAvgTemperatureByTimeRange(
+            @Param("stationId") Long stationId,
+            @Param("from") Instant from,
+            @Param("to") Instant to
+    );
+    
     void deleteByStationId(Long stationId);
 
 }

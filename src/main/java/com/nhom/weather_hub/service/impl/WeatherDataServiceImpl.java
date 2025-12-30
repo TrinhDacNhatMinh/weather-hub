@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhom.weather_hub.domain.records.ThresholdEvaluation;
 import com.nhom.weather_hub.domain.records.WeatherDataRequest;
-import com.nhom.weather_hub.dto.response.AlertResponse;
-import com.nhom.weather_hub.dto.response.DailyWeatherSummaryResponse;
-import com.nhom.weather_hub.dto.response.HourWeatherDataSummaryResponse;
-import com.nhom.weather_hub.dto.response.WeatherDataResponse;
+import com.nhom.weather_hub.dto.response.*;
 import com.nhom.weather_hub.entity.Alert;
 import com.nhom.weather_hub.entity.Station;
 import com.nhom.weather_hub.entity.WeatherData;
@@ -18,6 +15,7 @@ import com.nhom.weather_hub.mapper.AlertMapper;
 import com.nhom.weather_hub.mapper.WeatherDataMapper;
 import com.nhom.weather_hub.projection.DailyWeatherSummaryProjection;
 import com.nhom.weather_hub.projection.HourWeatherSummaryProjection;
+import com.nhom.weather_hub.projection.StationAvgTemperatureProjection;
 import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.repository.WeatherDataRepository;
 import com.nhom.weather_hub.service.AlertService;
@@ -164,6 +162,24 @@ public class WeatherDataServiceImpl implements WeatherDataService {
                                 p.getAvgDust(),
                                 p.getTotalRainfall()
                         ))
+                .toList();
+    }
+
+    @Override
+    public List<StationAvgTemperatureResponse> getAvgTemperature(Long stationId) {
+        Instant to = TimeUtils.nowVn();
+        Instant from = to.minus(1, ChronoUnit.HOURS);
+        List<StationAvgTemperatureProjection> projections = weatherDataRepository.findAvgTemperatureByTimeRange(stationId, from, to);
+
+        return projections.stream()
+                .map(
+                        p -> new StationAvgTemperatureResponse(
+                                p.getId(),
+                                p.getName(),
+                                p.getLatitude(),
+                                p.getLongitude(),
+                                p.getAvgTemperature()
+                ))
                 .toList();
     }
 
