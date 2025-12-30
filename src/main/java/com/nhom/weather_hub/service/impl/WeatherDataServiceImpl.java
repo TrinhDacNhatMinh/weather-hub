@@ -6,6 +6,7 @@ import com.nhom.weather_hub.domain.records.ThresholdEvaluation;
 import com.nhom.weather_hub.domain.records.WeatherDataRequest;
 import com.nhom.weather_hub.dto.response.AlertResponse;
 import com.nhom.weather_hub.dto.response.DailyWeatherSummaryResponse;
+import com.nhom.weather_hub.dto.response.HourWeatherDataSummaryResponse;
 import com.nhom.weather_hub.dto.response.WeatherDataResponse;
 import com.nhom.weather_hub.entity.Alert;
 import com.nhom.weather_hub.entity.Station;
@@ -16,6 +17,7 @@ import com.nhom.weather_hub.exception.ResourceNotFoundException;
 import com.nhom.weather_hub.mapper.AlertMapper;
 import com.nhom.weather_hub.mapper.WeatherDataMapper;
 import com.nhom.weather_hub.projection.DailyWeatherSummaryProjection;
+import com.nhom.weather_hub.projection.HourWeatherSummaryProjection;
 import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.repository.WeatherDataRepository;
 import com.nhom.weather_hub.service.AlertService;
@@ -114,7 +116,7 @@ public class WeatherDataServiceImpl implements WeatherDataService {
     @Transactional(readOnly = true)
     public List<DailyWeatherSummaryResponse> getDailySummary(Long stationId, int days) {
 
-        Instant to = Instant.now();
+        Instant to = TimeUtils.nowVn();
         Instant from = to.minus(days, ChronoUnit.DAYS);
 
         List<DailyWeatherSummaryProjection> projections = weatherDataRepository.findDailySummary(stationId, from, to);
@@ -141,6 +143,27 @@ public class WeatherDataServiceImpl implements WeatherDataService {
 
                         p.getTotalRainfall()
                 ))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<HourWeatherDataSummaryResponse> getHourSummary(Long stationId, int hour) {
+        Instant to = TimeUtils.nowVn();
+        Instant from = to.minus(hour, ChronoUnit.HOURS);
+
+        List<HourWeatherSummaryProjection> projections = weatherDataRepository.findLast24HoursSummary(stationId, from, to);
+
+        return projections.stream()
+                .map(
+                        p -> new HourWeatherDataSummaryResponse(
+                                p.getHour(),
+                                p.getAvgTemperature(),
+                                p.getAvgHumidity(),
+                                p.getAvgWindSpeed(),
+                                p.getAvgDust(),
+                                p.getTotalRainfall()
+                        ))
                 .toList();
     }
 
