@@ -87,7 +87,7 @@ public class WeatherDataController {
 
     @GetMapping("/stations/{stationId}/avg-temperature")
     @Operation(
-            summary = "Get average temperature of a station in an hour",
+            summary = "Get average temperature of station's current user or station's public in an hour",
             description = "Retrieve the average temperature of a specific weather station. " +
                     "The result is calculated based on weather data records associated " +
                     "with the station and is intended for statistical analysis or chart visualization."
@@ -97,8 +97,8 @@ public class WeatherDataController {
             @ApiResponse(responseCode = "401", description = "Unauthorized, authentication required"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<List<StationAvgTemperatureResponse>> getAvgTemperature(@PathVariable Long stationId) {
-        List<StationAvgTemperatureResponse> responses = weatherDataService.getAvgTemperature(stationId);
+    public ResponseEntity<List<StationAvgTemperatureResponse>> getAvgTemperature() {
+        List<StationAvgTemperatureResponse> responses = weatherDataService.getAvgTemperature();
         return ResponseEntity.ok(responses);
     }
 

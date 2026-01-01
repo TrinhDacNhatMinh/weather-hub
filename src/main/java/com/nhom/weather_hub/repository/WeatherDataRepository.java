@@ -74,12 +74,16 @@ public interface WeatherDataRepository extends JpaRepository<WeatherData, Long> 
             SELECT s.id,s.`name`, s.latitude, s.longitude, ROUND(AVG(w.temperature), 2) AS avg_temperature
             FROM stations s
             JOIN weather_data w ON s.id = w.station_id AND w.record_at >= :from AND w.record_at < :to
-            WHERE s.is_public = 1 OR s.id = :stationId
+            WHERE s.is_public = 1 OR s.id IN (
+                SELECT s.id
+                FROM stations s
+                WHERE s.user_id = :userId
+            )
             GROUP BY s.id
             """, nativeQuery = true
     )
     List<StationAvgTemperatureProjection> findAvgTemperatureByTimeRange(
-            @Param("stationId") Long stationId,
+            @Param("userId") Long userId,
             @Param("from") Instant from,
             @Param("to") Instant to
     );

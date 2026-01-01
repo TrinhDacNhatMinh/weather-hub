@@ -7,6 +7,7 @@ import com.nhom.weather_hub.domain.records.WeatherDataRequest;
 import com.nhom.weather_hub.dto.response.*;
 import com.nhom.weather_hub.entity.Alert;
 import com.nhom.weather_hub.entity.Station;
+import com.nhom.weather_hub.entity.User;
 import com.nhom.weather_hub.entity.WeatherData;
 import com.nhom.weather_hub.event.AlertCreatedEvent;
 import com.nhom.weather_hub.event.WeatherDataCreatedEvent;
@@ -19,6 +20,7 @@ import com.nhom.weather_hub.projection.StationAvgTemperatureProjection;
 import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.repository.WeatherDataRepository;
 import com.nhom.weather_hub.service.AlertService;
+import com.nhom.weather_hub.service.UserService;
 import com.nhom.weather_hub.service.WeatherDataService;
 import com.nhom.weather_hub.util.TimeUtils;
 import lombok.RequiredArgsConstructor;
@@ -41,9 +43,10 @@ public class WeatherDataServiceImpl implements WeatherDataService {
     private final StationRepository stationRepository;
     private final WeatherDataMapper weatherDataMapper;
     private final AlertMapper alertMapper;
-    private final AlertService alertService;
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final AlertService alertService;
+    private final UserService userService;
 
     @Override
     @Transactional
@@ -166,10 +169,11 @@ public class WeatherDataServiceImpl implements WeatherDataService {
     }
 
     @Override
-    public List<StationAvgTemperatureResponse> getAvgTemperature(Long stationId) {
+    public List<StationAvgTemperatureResponse> getAvgTemperature() {
         Instant to = TimeUtils.nowVn();
         Instant from = to.minus(1, ChronoUnit.HOURS);
-        List<StationAvgTemperatureProjection> projections = weatherDataRepository.findAvgTemperatureByTimeRange(stationId, from, to);
+        User user = userService.getCurrentUser();
+        List<StationAvgTemperatureProjection> projections = weatherDataRepository.findAvgTemperatureByTimeRange(user.getId(), from, to);
 
         return projections.stream()
                 .map(

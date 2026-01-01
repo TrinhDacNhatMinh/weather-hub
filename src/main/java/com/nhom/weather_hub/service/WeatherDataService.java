@@ -17,7 +17,7 @@ public interface WeatherDataService {
 
     List<HourWeatherDataSummaryResponse> getHourSummary(Long stationId, int hour);
 
-    List<StationAvgTemperatureResponse> getAvgTemperature(Long stationId);
+    List<StationAvgTemperatureResponse> getAvgTemperature();
 
     void deleteWeatherDataByStation(Long stationId);
 
