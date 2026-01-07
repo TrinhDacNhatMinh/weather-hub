@@ -85,7 +85,7 @@ public class WeatherDataController {
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("/stations/{stationId}/avg-temperature")
+    @GetMapping("/stations/avg-temperature")
     @Operation(
             summary = "Get average temperature of station's current user or station's public in an hour",
             description = "Retrieve the average temperature of a specific weather station. " +
