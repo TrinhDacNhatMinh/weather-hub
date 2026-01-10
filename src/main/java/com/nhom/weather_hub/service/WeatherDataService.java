@@ -19,6 +19,4 @@ public interface WeatherDataService {
 
     List<StationAvgTemperatureResponse> getAvgTemperature();
 
-    void deleteWeatherDataByStation(Long stationId);
-
 }

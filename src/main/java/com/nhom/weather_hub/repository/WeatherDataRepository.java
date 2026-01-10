@@ -87,7 +87,5 @@ public interface WeatherDataRepository extends JpaRepository<WeatherData, Long> 
             @Param("from") Instant from,
             @Param("to") Instant to
     );
-    
-    void deleteByStationId(Long stationId);
 
 }

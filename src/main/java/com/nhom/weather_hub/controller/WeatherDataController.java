@@ -102,22 +102,4 @@ public class WeatherDataController {
         return ResponseEntity.ok(responses);
     }
 
-    @DeleteMapping("/station")
-    @Operation(
-            summary = "Delete weather data by station ID",
-            description = "Delete all weather data records associated with a specific station ID." +
-                    "Requires admin permission."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Weather data deleted successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized, authentication required"),
-            @ApiResponse(responseCode = "403", description = "Forbidden, admin permission required"),
-            @ApiResponse(responseCode = "404", description = "Station or weather data not found"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    public ResponseEntity<Void> deleteWeatherDataByStation(@RequestParam("stationId") Long stationId) {
-        weatherDataService.deleteWeatherDataByStation(stationId);
-        return ResponseEntity.noContent().build();
-    }
-
 }

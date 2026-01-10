@@ -187,13 +187,4 @@ public class WeatherDataServiceImpl implements WeatherDataService {
                 .toList();
     }
 
-    @Override
-    @Transactional
-    public void deleteWeatherDataByStation(Long stationId) {
-        if (!stationRepository.existsById(stationId)) {
-            throw new ResourceNotFoundException("Station not found with id " + stationId);
-        }
-        weatherDataRepository.deleteByStationId(stationId);
-    }
-
 }
