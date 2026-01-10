@@ -7,7 +7,6 @@ import com.nhom.weather_hub.domain.records.WeatherDataRequest;
 import com.nhom.weather_hub.dto.response.*;
 import com.nhom.weather_hub.entity.Alert;
 import com.nhom.weather_hub.entity.Station;
-import com.nhom.weather_hub.entity.User;
 import com.nhom.weather_hub.entity.WeatherData;
 import com.nhom.weather_hub.event.AlertCreatedEvent;
 import com.nhom.weather_hub.event.WeatherDataCreatedEvent;
@@ -16,7 +15,6 @@ import com.nhom.weather_hub.mapper.AlertMapper;
 import com.nhom.weather_hub.mapper.WeatherDataMapper;
 import com.nhom.weather_hub.projection.DailyWeatherSummaryProjection;
 import com.nhom.weather_hub.projection.HourWeatherSummaryProjection;
-import com.nhom.weather_hub.projection.StationAvgTemperatureProjection;
 import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.repository.WeatherDataRepository;
 import com.nhom.weather_hub.service.AlertService;
@@ -165,25 +163,6 @@ public class WeatherDataServiceImpl implements WeatherDataService {
                                 p.getAvgDust(),
                                 p.getTotalRainfall()
                         ))
-                .toList();
-    }
-
-    @Override
-    public List<StationAvgTemperatureResponse> getAvgTemperature() {
-        Instant to = TimeUtils.nowVn();
-        Instant from = to.minus(1, ChronoUnit.HOURS);
-        User user = userService.getCurrentUser();
-        List<StationAvgTemperatureProjection> projections = weatherDataRepository.findAvgTemperatureByTimeRange(user.getId(), from, to);
-
-        return projections.stream()
-                .map(
-                        p -> new StationAvgTemperatureResponse(
-                                p.getId(),
-                                p.getName(),
-                                p.getLatitude(),
-                                p.getLongitude(),
-                                p.getAvgTemperature()
-                ))
                 .toList();
     }
 

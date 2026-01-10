@@ -2,7 +2,6 @@ package com.nhom.weather_hub.service;
 
 import com.nhom.weather_hub.dto.response.DailyWeatherSummaryResponse;
 import com.nhom.weather_hub.dto.response.HourWeatherDataSummaryResponse;
-import com.nhom.weather_hub.dto.response.StationAvgTemperatureResponse;
 import com.nhom.weather_hub.dto.response.WeatherDataResponse;
 
 import java.util.List;
@@ -16,7 +15,5 @@ public interface WeatherDataService {
     List<DailyWeatherSummaryResponse> getDailySummary(Long stationId, int day);
 
     List<HourWeatherDataSummaryResponse> getHourSummary(Long stationId, int hour);
-
-    List<StationAvgTemperatureResponse> getAvgTemperature();
 
 }

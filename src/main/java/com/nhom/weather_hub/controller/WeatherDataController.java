@@ -2,7 +2,6 @@ package com.nhom.weather_hub.controller;
 
 import com.nhom.weather_hub.dto.response.DailyWeatherSummaryResponse;
 import com.nhom.weather_hub.dto.response.HourWeatherDataSummaryResponse;
-import com.nhom.weather_hub.dto.response.StationAvgTemperatureResponse;
 import com.nhom.weather_hub.dto.response.WeatherDataResponse;
 import com.nhom.weather_hub.service.WeatherDataService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -82,23 +81,6 @@ public class WeatherDataController {
             @RequestParam(defaultValue = "24") @Min(1) @Max(24) int hour
     ) {
         List<HourWeatherDataSummaryResponse> responses = weatherDataService.getHourSummary(stationId, hour);
-        return ResponseEntity.ok(responses);
-    }
-
-    @GetMapping("/stations/avg-temperature")
-    @Operation(
-            summary = "Get average temperature of station's current user or station's public in an hour",
-            description = "Retrieve the average temperature of a specific weather station. " +
-                    "The result is calculated based on weather data records associated " +
-                    "with the station and is intended for statistical analysis or chart visualization."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Weather data retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized, authentication required"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    public ResponseEntity<List<StationAvgTemperatureResponse>> getAvgTemperature() {
-        List<StationAvgTemperatureResponse> responses = weatherDataService.getAvgTemperature();
         return ResponseEntity.ok(responses);
     }
 
