@@ -4,6 +4,7 @@ import com.nhom.weather_hub.domain.enums.StationStatus;
 import com.nhom.weather_hub.dto.request.AddStationRequest;
 import com.nhom.weather_hub.dto.request.UpdateStationRequest;
 import com.nhom.weather_hub.dto.response.PageResponse;
+import com.nhom.weather_hub.dto.response.StationMapResponse;
 import com.nhom.weather_hub.dto.response.StationResponse;
 
 import java.time.Instant;
@@ -30,6 +31,8 @@ public interface StationService {
     StationResponse getStationByApiKey(String apiKey);
 
     StationStatus getStationStatus(Instant updatedAt);
+
+    List<StationMapResponse> getStationsForMap(boolean includePublic);
 
     StationResponse updateStation(Long id, UpdateStationRequest request);
 
