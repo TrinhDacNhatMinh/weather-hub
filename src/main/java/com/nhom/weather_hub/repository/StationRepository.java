@@ -32,7 +32,7 @@ public interface StationRepository extends JpaRepository<Station, Long> {
             			ROUND(AVG(w.temperature), 2) AS temperature,
             			ROUND(AVG(w.humidity), 2) AS humidity,
             			ROUND(AVG(w.wind_speed), 2) AS windSpeed,
-            			ROUND(SUM(w.rainfall / 60), 2) AS totalRainfall,
+            			ROUND(SUM(w.rainfall / 3600), 2) AS totalRainfall,
             			ROUND(AVG(w.dust), 2) AS dust
             FROM stations s LEFT JOIN weather_data w ON s.id = w.station_id AND w.record_at >= :from AND w.record_at < :to
             WHERE (s.is_public = 1 AND :includePublic = TRUE) OR s.id IN (

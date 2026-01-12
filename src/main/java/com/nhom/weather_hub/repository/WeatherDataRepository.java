@@ -34,7 +34,7 @@ public interface WeatherDataRepository extends JpaRepository<WeatherData, Long> 
                 MAX(wind_speed)            AS maxWindSpeed,
                 ROUND(AVG(wind_speed), 2)  AS avgWindSpeed,
             
-                ROUND(SUM(rainfall / 60), 2) AS totalRainfall
+                ROUND(SUM(rainfall / 3600), 2) AS totalRainfall
             FROM weather_data
             WHERE station_id = :stationId AND record_at >= :from AND record_at < :to
             GROUP BY DATE(record_at)
@@ -55,7 +55,7 @@ public interface WeatherDataRepository extends JpaRepository<WeatherData, Long> 
                     ROUND(AVG(wind_speed), 2)  AS avgWindSpeed,
                     ROUND(AVG(dust), 2)        AS avgDust,
             
-                    ROUND(SUM(rainfall / 60), 2) AS totalRainfall
+                    ROUND(SUM(rainfall / 3600), 2) AS totalRainfall
                 FROM weather_data
                 WHERE station_id = :stationId
                   AND record_at >= :from
