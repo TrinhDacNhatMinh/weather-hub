@@ -101,6 +101,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/stations/user/me/stations",
                                 "/api/stations/public",
+                                "/api/stations/map",
                                 "/api/stations/*",
                                 "/api/stations/*/threshold"
                         ).authenticated()

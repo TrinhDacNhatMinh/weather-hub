@@ -3,6 +3,7 @@ package com.nhom.weather_hub.controller;
 import com.nhom.weather_hub.dto.request.AddStationRequest;
 import com.nhom.weather_hub.dto.request.UpdateStationRequest;
 import com.nhom.weather_hub.dto.response.PageResponse;
+import com.nhom.weather_hub.dto.response.StationMapResponse;
 import com.nhom.weather_hub.dto.response.StationResponse;
 import com.nhom.weather_hub.dto.response.ThresholdResponse;
 import com.nhom.weather_hub.service.StationService;
@@ -213,6 +214,25 @@ public class StationController {
         ThresholdResponse response =
                 thresholdService.getThresholdByStationId(stationId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/map")
+    @Operation(
+            summary = "Get stations with latest weather data for map display",
+            description = "Return stations owned by the current user and optional public stations. " +
+                    "Including location and aggregated weather data for map visualization."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Stations retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized, user not logged in"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+
+    })
+    public ResponseEntity<List<StationMapResponse>> getStationsForMap(
+        @RequestParam(defaultValue = "true") boolean includePublic
+    ) {
+        List<StationMapResponse> responses = stationService.getStationsForMap(includePublic);
+        return ResponseEntity.ok(responses);
     }
 
     @PutMapping("/{id}")

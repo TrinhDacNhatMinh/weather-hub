@@ -4,7 +4,6 @@ import com.nhom.weather_hub.entity.WeatherData;
 import com.nhom.weather_hub.projection.CurrentWeatherDataProjection;
 import com.nhom.weather_hub.projection.DailyWeatherSummaryProjection;
 import com.nhom.weather_hub.projection.HourWeatherSummaryProjection;
-import com.nhom.weather_hub.projection.StationAvgTemperatureProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,7 +37,7 @@ public interface WeatherDataRepository extends JpaRepository<WeatherData, Long> 
                 MAX(wind_speed)            AS maxWindSpeed,
                 ROUND(AVG(wind_speed), 2)  AS avgWindSpeed,
             
-                ROUND(SUM(rainfall / 60), 2) AS totalRainfall
+                ROUND(SUM(rainfall / 3600), 2) AS totalRainfall
             FROM weather_data
             WHERE station_id = :stationId AND record_at >= :from AND record_at < :to
             GROUP BY DATE(record_at)
@@ -59,7 +58,7 @@ public interface WeatherDataRepository extends JpaRepository<WeatherData, Long> 
                     ROUND(AVG(wind_speed), 2)  AS avgWindSpeed,
                     ROUND(AVG(dust), 2)        AS avgDust,
             
-                    ROUND(SUM(rainfall / 60), 2) AS totalRainfall
+                    ROUND(SUM(rainfall / 3600), 2) AS totalRainfall
                 FROM weather_data
                 WHERE station_id = :stationId
                   AND record_at >= :from
@@ -69,24 +68,6 @@ public interface WeatherDataRepository extends JpaRepository<WeatherData, Long> 
             """, nativeQuery = true)
     List<HourWeatherSummaryProjection> findLast24HoursSummary(
             @Param("stationId") Long stationId,
-            @Param("from") Instant from,
-            @Param("to") Instant to
-    );
-
-    @Query(value = """
-            SELECT s.id,s.`name`, s.latitude, s.longitude, ROUND(AVG(w.temperature), 2) AS avg_temperature
-            FROM stations s
-            JOIN weather_data w ON s.id = w.station_id AND w.record_at >= :from AND w.record_at < :to
-            WHERE s.is_public = 1 OR s.id IN (
-                SELECT s.id
-                FROM stations s
-                WHERE s.user_id = :userId
-            )
-            GROUP BY s.id
-            """, nativeQuery = true
-    )
-    List<StationAvgTemperatureProjection> findAvgTemperatureByTimeRange(
-            @Param("userId") Long userId,
             @Param("from") Instant from,
             @Param("to") Instant to
     );

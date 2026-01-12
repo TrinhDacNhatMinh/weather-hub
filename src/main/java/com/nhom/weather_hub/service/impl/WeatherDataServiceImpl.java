@@ -18,7 +18,6 @@ import com.nhom.weather_hub.mapper.WeatherDataMapper;
 import com.nhom.weather_hub.projection.CurrentWeatherDataProjection;
 import com.nhom.weather_hub.projection.DailyWeatherSummaryProjection;
 import com.nhom.weather_hub.projection.HourWeatherSummaryProjection;
-import com.nhom.weather_hub.projection.StationAvgTemperatureProjection;
 import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.repository.WeatherDataRepository;
 import com.nhom.weather_hub.service.AlertService;
@@ -175,24 +174,6 @@ public class WeatherDataServiceImpl implements WeatherDataService {
                 .toList();
     }
 
-    @Override
-    public List<StationAvgTemperatureResponse> getAvgTemperature() {
-        Instant to = TimeUtils.nowVn();
-        Instant from = to.minus(1, ChronoUnit.HOURS);
-        User user = userService.getCurrentUser();
-        List<StationAvgTemperatureProjection> projections = weatherDataRepository.findAvgTemperatureByTimeRange(user.getId(), from, to);
-
-        return projections.stream()
-                .map(
-                        p -> new StationAvgTemperatureResponse(
-                                p.getId(),
-                                p.getName(),
-                                p.getLatitude(),
-                                p.getLongitude(),
-                                p.getAvgTemperature()
-                ))
-                .toList();
-    }
 
     @Override
     @Transactional(readOnly = true)

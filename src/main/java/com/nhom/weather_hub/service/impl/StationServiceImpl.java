@@ -4,6 +4,7 @@ import com.nhom.weather_hub.domain.enums.StationStatus;
 import com.nhom.weather_hub.dto.request.AddStationRequest;
 import com.nhom.weather_hub.dto.request.UpdateStationRequest;
 import com.nhom.weather_hub.dto.response.PageResponse;
+import com.nhom.weather_hub.dto.response.StationMapResponse;
 import com.nhom.weather_hub.dto.response.StationResponse;
 import com.nhom.weather_hub.entity.Station;
 import com.nhom.weather_hub.entity.User;
@@ -11,6 +12,7 @@ import com.nhom.weather_hub.exception.ResourceNotFoundException;
 import com.nhom.weather_hub.exception.business.StationAlreadyAssignedException;
 import com.nhom.weather_hub.exception.business.PermissionDeniedException;
 import com.nhom.weather_hub.mapper.StationMapper;
+import com.nhom.weather_hub.projection.StationMapProjection;
 import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.service.StationService;
 import com.nhom.weather_hub.service.ThresholdService;
@@ -27,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -190,6 +193,29 @@ public class StationServiceImpl implements StationService {
         }
 
         return StationStatus.OFFLINE;
+    }
+
+    @Override
+    public List<StationMapResponse> getStationsForMap(boolean includePublic) {
+        Instant to = TimeUtils.nowVn();
+        Instant from = to.minus(1, ChronoUnit.HOURS);
+        User user = userService.getCurrentUser();
+        List<StationMapProjection> projections = stationRepository.findStationsForMap(user.getId(), from, to, includePublic);
+        return projections.stream()
+                .map(
+                        p -> new StationMapResponse(
+                                p.getStationId(),
+                                p.getStationName(),
+                                p.getLatitude(),
+                                p.getLongitude(),
+                                new StationMapResponse.WeatherSnapshot(
+                                        p.getTemperature(),
+                                        p.getHumidity(),
+                                        p.getWindSpeed(),
+                                        p.getTotalRainfall(),
+                                        p.getDust()
+                                )
+                )).toList();
     }
 
     @Override
