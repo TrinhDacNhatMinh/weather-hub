@@ -1,7 +1,9 @@
 package com.nhom.weather_hub.service;
 
+import com.nhom.weather_hub.dto.response.CurrentWeatherDataResponse;
 import com.nhom.weather_hub.dto.response.DailyWeatherSummaryResponse;
 import com.nhom.weather_hub.dto.response.HourWeatherDataSummaryResponse;
+import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.StationAvgTemperatureResponse;
 import com.nhom.weather_hub.dto.response.WeatherDataResponse;
 
@@ -18,6 +20,8 @@ public interface WeatherDataService {
     List<HourWeatherDataSummaryResponse> getHourSummary(Long stationId, int hour);
 
     List<StationAvgTemperatureResponse> getAvgTemperature();
+
+    PageResponse<CurrentWeatherDataResponse> getCurrentWeatherDataForUserAndPublicStations(int page, int size);
 
     void deleteWeatherDataByStation(Long stationId);
 

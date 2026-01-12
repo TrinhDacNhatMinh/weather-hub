@@ -2,6 +2,7 @@ package com.nhom.weather_hub.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nhom.weather_hub.domain.enums.StationStatus;
 import com.nhom.weather_hub.domain.records.ThresholdEvaluation;
 import com.nhom.weather_hub.domain.records.WeatherDataRequest;
 import com.nhom.weather_hub.dto.response.*;
@@ -14,18 +15,23 @@ import com.nhom.weather_hub.event.WeatherDataCreatedEvent;
 import com.nhom.weather_hub.exception.ResourceNotFoundException;
 import com.nhom.weather_hub.mapper.AlertMapper;
 import com.nhom.weather_hub.mapper.WeatherDataMapper;
+import com.nhom.weather_hub.projection.CurrentWeatherDataProjection;
 import com.nhom.weather_hub.projection.DailyWeatherSummaryProjection;
 import com.nhom.weather_hub.projection.HourWeatherSummaryProjection;
 import com.nhom.weather_hub.projection.StationAvgTemperatureProjection;
 import com.nhom.weather_hub.repository.StationRepository;
 import com.nhom.weather_hub.repository.WeatherDataRepository;
 import com.nhom.weather_hub.service.AlertService;
+import com.nhom.weather_hub.service.StationService;
 import com.nhom.weather_hub.service.UserService;
 import com.nhom.weather_hub.service.WeatherDataService;
 import com.nhom.weather_hub.util.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +53,7 @@ public class WeatherDataServiceImpl implements WeatherDataService {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final AlertService alertService;
     private final UserService userService;
+    private final StationService stationService;
 
     @Override
     @Transactional
@@ -188,12 +195,114 @@ public class WeatherDataServiceImpl implements WeatherDataService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public PageResponse<CurrentWeatherDataResponse> getCurrentWeatherDataForUserAndPublicStations(int page, int size) {
+        User user = userService.getCurrentUser();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CurrentWeatherDataProjection> projectionPage = weatherDataRepository.findCurrentWeatherDataForUserAndPublicStations(user.getId(), pageable);
+
+        List<CurrentWeatherDataResponse> data = projectionPage.getContent().stream()
+                .map(p -> new CurrentWeatherDataResponse(
+                        p.getId(),
+                        p.getTemperature(),
+                        p.getHumidity(),
+                        p.getWindSpeed(),
+                        p.getRainfall(),
+                        p.getDust(),
+                        calculateAQI(p.getDust()),
+                        p.getRecordAt(),
+                        p.getStationId(),
+                        p.getStationName(),
+                        calculateStationStatus(p.getRecordAt()),
+                        p.getLatitude(),
+                        p.getLongitude()
+                ))
+                .toList();
+
+        return new PageResponse<>(
+                data,
+                projectionPage.getNumber(),
+                projectionPage.getSize(),
+                projectionPage.getTotalElements(),
+                projectionPage.getTotalPages(),
+                projectionPage.isLast()
+        );
+    }
+
+    @Override
     @Transactional
     public void deleteWeatherDataByStation(Long stationId) {
         if (!stationRepository.existsById(stationId)) {
             throw new ResourceNotFoundException("Station not found with id " + stationId);
         }
         weatherDataRepository.deleteByStationId(stationId);
+    }
+
+    /**
+     * Calculate AQI from PM2.5 concentration using US EPA formula
+     * @param pm25 PM2.5 concentration in µg/m³
+     * @return AQI value (0-500+)
+     */
+    private Float calculateAQI(Float pm25) {
+        if (pm25 == null) {
+            return null;
+        }
+
+        // US EPA AQI breakpoints for PM2.5 (24-hour average)
+        double[][] breakpoints = {
+            // {C_low, C_high, I_low, I_high}
+            {0.0, 12.0, 0, 50},       // Good
+            {12.1, 35.4, 51, 100},    // Moderate
+            {35.5, 55.4, 101, 150},   // Unhealthy for Sensitive Groups
+            {55.5, 150.4, 151, 200},  // Unhealthy
+            {150.5, 250.4, 201, 300}, // Very Unhealthy
+            {250.5, 350.4, 301, 400}, // Hazardous
+            {350.5, 500.4, 401, 500}  // Hazardous
+        };
+
+        double concentration = pm25;
+        
+        // Find the appropriate breakpoint
+        for (double[] bp : breakpoints) {
+            if (concentration >= bp[0] && concentration <= bp[1]) {
+                double cLow = bp[0];
+                double cHigh = bp[1];
+                double iLow = bp[2];
+                double iHigh = bp[3];
+                
+                // AQI formula: I = [(I_high - I_low) / (C_high - C_low)] * (C - C_low) + I_low
+                double aqi = ((iHigh - iLow) / (cHigh - cLow)) * (concentration - cLow) + iLow;
+                return (float) Math.round(aqi);
+            }
+        }
+        
+        // If concentration exceeds the highest breakpoint
+        if (concentration > 500.4) {
+            return 500f;
+        }
+        
+        return 0f;
+    }
+
+    /**
+     * Calculate station status based on the latest weather data record time
+     * @param recordAt Latest weather data timestamp
+     * @return ONLINE if data within 60 seconds, otherwise OFFLINE
+     */
+    private StationStatus calculateStationStatus(Instant recordAt) {
+        if (recordAt == null) {
+            return StationStatus.OFFLINE;
+        }
+
+        // Use actual current time (not VN adjusted time) since recordAt is stored in UTC
+        Instant now = Instant.now();
+        long diffSeconds = Math.abs(now.getEpochSecond() - recordAt.getEpochSecond());
+
+        if (diffSeconds <= 60) {
+            return StationStatus.ONLINE;
+        }
+
+        return StationStatus.OFFLINE;
     }
 
 }

@@ -1,7 +1,9 @@
 package com.nhom.weather_hub.controller;
 
+import com.nhom.weather_hub.dto.response.CurrentWeatherDataResponse;
 import com.nhom.weather_hub.dto.response.DailyWeatherSummaryResponse;
 import com.nhom.weather_hub.dto.response.HourWeatherDataSummaryResponse;
+import com.nhom.weather_hub.dto.response.PageResponse;
 import com.nhom.weather_hub.dto.response.StationAvgTemperatureResponse;
 import com.nhom.weather_hub.dto.response.WeatherDataResponse;
 import com.nhom.weather_hub.service.WeatherDataService;
@@ -100,6 +102,27 @@ public class WeatherDataController {
     public ResponseEntity<List<StationAvgTemperatureResponse>> getAvgTemperature() {
         List<StationAvgTemperatureResponse> responses = weatherDataService.getAvgTemperature();
         return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/stations/map")
+    @Operation(
+            summary = "Get current weather data from user's and public stations",
+            description = "Retrieve the latest weather data record from each station that the current user owns " +
+                    "or from public stations. Returns the most recent weather reading per station, " +
+                    "including station status and coordinates. Requires authentication."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Current weather data retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid page or size parameter"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized, authentication required"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<PageResponse<CurrentWeatherDataResponse>> getCurrentWeatherData(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size
+    ) {
+        PageResponse<CurrentWeatherDataResponse> response = weatherDataService.getCurrentWeatherDataForUserAndPublicStations(page, size);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/station")

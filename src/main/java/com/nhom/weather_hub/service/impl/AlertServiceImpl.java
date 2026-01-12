@@ -167,16 +167,16 @@ public class AlertServiceImpl implements AlertService {
         List<String> messages = new ArrayList<>();
 
         Map<String, ThresholdStatus> map = Map.of(
-                "Temperature", e.temperature(),
-                "Humidity", e.humidity(),
-                "Wind speed", e.windSpeed(),
-                "Rainfall", e.rainfall(),
-                "Dust", e.dust()
+                "Nhiệt độ", e.temperature(),
+                "Độ ẩm", e.humidity(),
+                "Tốc độ gió", e.windSpeed(),
+                "Lượng mưa", e.rainfall(),
+                "Chỉ số bụi", e.dust()
         );
 
         map.forEach((name, status) -> {
-            if (status == ThresholdStatus.BELOW_MIN) messages.add(name + " below minimum");
-            else if (status == ThresholdStatus.ABOVE_MAX) messages.add(name + " above maximum");
+            if (status == ThresholdStatus.BELOW_MIN) messages.add(name + " vượt ngưỡng tối thiểu");
+            else if (status == ThresholdStatus.ABOVE_MAX) messages.add(name + " vượt ngưỡng tối đa");
         });
 
         return String.join(", ", messages);
