@@ -51,6 +51,9 @@ public class AuthServiceImpl implements AuthService {
     @Value("${jwt.refresh-expiration}")
     private long refreshExpiration;
 
+    @Value("${jwt.absolute-session-expiration}")
+    private long absoluteSessionExpiration;
+
     @Override
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
@@ -129,10 +132,12 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtUtil.generateAccessToken(user.getUsername());
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
 
+        Instant absoluteExpiryDate = Instant.now().plusMillis(absoluteSessionExpiration);
         RefreshToken tokenEntity = RefreshToken.builder()
                 .user(user)
                 .token(refreshToken)
                 .expiryDate(Instant.now().plusMillis(refreshExpiration))
+                .absoluteExpiryDate(absoluteExpiryDate)
                 .build();
         refreshTokenRepository.save(tokenEntity);
 
@@ -149,6 +154,13 @@ public class AuthServiceImpl implements AuthService {
             refreshTokenRepository.delete(tokenEntity);
             throw new RefreshTokenException("Refresh token expired");
         }
+        
+        // Check absolute session expiration
+        if (tokenEntity.getAbsoluteExpiryDate().isBefore(Instant.now())) {
+            refreshTokenRepository.delete(tokenEntity);
+            throw new RefreshTokenException("Session expired. Please login again");
+        }
+        
         if (!jwtUtil.validateToken(request.refreshToken())) {
             throw new RefreshTokenException("Invalid refresh token");
         }
@@ -162,10 +174,12 @@ public class AuthServiceImpl implements AuthService {
         String newAccessToken = jwtUtil.generateAccessToken(username);
         String newRefreshToken = jwtUtil.generateRefreshToken(username);
 
+        // Preserve the original absolute expiry date
         RefreshToken newTokenEntity = RefreshToken.builder()
                 .user(user)
                 .token(newRefreshToken)
                 .expiryDate(Instant.now().plusMillis(refreshExpiration))
+                .absoluteExpiryDate(tokenEntity.getAbsoluteExpiryDate())
                 .build();
         refreshTokenRepository.save(newTokenEntity);
 
