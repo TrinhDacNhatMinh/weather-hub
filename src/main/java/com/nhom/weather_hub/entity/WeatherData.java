@@ -14,8 +14,7 @@ import java.time.Instant;
 @Builder
 @Entity
 @Table(name = "weather_data", indexes = {
-        @Index(name = "idx_weather_data_record_at", columnList = "record_at"),
-        @Index(name = "idx_weather_data_station_id", columnList = "station_id")
+        @Index(name = "idx_weather_data_station_record", columnList = "station_id, record_at")
 })
 public class WeatherData {
 
