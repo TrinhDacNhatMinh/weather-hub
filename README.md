@@ -44,7 +44,7 @@ Key entities include:
 
 -   Java 17 Development Kit (JDK 17)
 -   Maven 3.11+
--   MySQL Server
+-   MySQL
 -   MQTT Broker (EMQX)
 
 ### Installation
